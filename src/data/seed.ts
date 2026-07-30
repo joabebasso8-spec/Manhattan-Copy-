@@ -52,9 +52,15 @@ export const TEMAS_DDS: TemaDDS[] = [
   { id: 't03', ordem: 3, tema: 'Ergonomia no posto de trabalho', mes: 7, dataDDS: '2026-07-08' },
   { id: 't04', ordem: 4, tema: 'Segurança com produtos químicos', mes: 7, dataDDS: '2026-07-09' },
   { id: 't05', ordem: 5, tema: 'Trabalho em altura', mes: 7, dataDDS: '2026-07-10' },
-  { id: 't06', ordem: 6, tema: 'Combate a incêndio e rotas de fuga', mes: 8, dataDDS: '2026-08-03' },
-  { id: 't07', ordem: 7, tema: 'Bloqueio e etiquetagem (LOTO)', mes: 8, dataDDS: '2026-08-04' },
-  { id: 't08', ordem: 8, tema: 'Movimentação manual de cargas', mes: 8, dataDDS: '2026-08-05' },
+  // Temas da Semana 31 (27/07 a 02/08) — alimentam o painel da lista de DDS.
+  { id: 't06', ordem: 6, tema: 'Atenção a pisos molhados na esmaltação', mes: 7, dataDDS: '2026-07-27' },
+  { id: 't07', ordem: 7, tema: 'Postura correta ao levantar peças', mes: 7, dataDDS: '2026-07-28' },
+  { id: 't08', ordem: 8, tema: 'Uso de protetor auricular nos fornos', mes: 7, dataDDS: '2026-07-29' },
+  { id: 't09', ordem: 9, tema: 'Descarte seguro de resíduos', mes: 7, dataDDS: '2026-07-30' },
+  { id: 't10', ordem: 10, tema: 'Comunicação de quase-acidentes', mes: 7, dataDDS: '2026-07-31' },
+  { id: 't11', ordem: 11, tema: 'Combate a incêndio e rotas de fuga', mes: 8, dataDDS: '2026-08-03' },
+  { id: 't12', ordem: 12, tema: 'Bloqueio e etiquetagem (LOTO)', mes: 8, dataDDS: '2026-08-04' },
+  { id: 't13', ordem: 13, tema: 'Movimentação manual de cargas', mes: 8, dataDDS: '2026-08-05' },
 ]
 
 const HOJE = '2026-07-30'
