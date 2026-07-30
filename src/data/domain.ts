@@ -1,0 +1,125 @@
+// =====================================================================
+// Dominio central da aplicacao — Projeto Manhattan / Modulo DDS e GL
+// =====================================================================
+//
+// O enum de siglas de status (a "Legenda de Preenchimento") e o coracao
+// do dominio. Ele e reutilizado nas grades de presenca das telas de
+// Ginastica Laboral (mensal) e de DDS (semanal), no painel de legenda do
+// menu e em qualquer componente que exiba ou edite presenca.
+
+/** Siglas de status de presenca/ausencia usadas em toda a aplicacao. */
+export enum StatusPresenca {
+  /** Presenca confirmada por assinatura fisica na lista impressa. */
+  Presente = 'X',
+  Folga = 'FO',
+  Falta = 'F',
+  Ferias = 'FE',
+  Atestado = 'AT',
+  Afastado = 'AF',
+  Desligado = 'D',
+}
+
+/** Descricao humana de cada sigla, para tooltips e legenda. */
+export const LEGENDA_STATUS: Record<StatusPresenca, string> = {
+  [StatusPresenca.Presente]: 'Presença assinada',
+  [StatusPresenca.Folga]: 'Folga',
+  [StatusPresenca.Falta]: 'Falta',
+  [StatusPresenca.Ferias]: 'Férias',
+  [StatusPresenca.Atestado]: 'Atestado',
+  [StatusPresenca.Afastado]: 'Afastado',
+  [StatusPresenca.Desligado]: 'Desligado',
+}
+
+/** Cor associada a cada sigla, para leitura rapida na grade. */
+export const COR_STATUS: Record<StatusPresenca, string> = {
+  [StatusPresenca.Presente]: '#1b7f4b',
+  [StatusPresenca.Folga]: '#6b7280',
+  [StatusPresenca.Falta]: '#c2410c',
+  [StatusPresenca.Ferias]: '#2563eb',
+  [StatusPresenca.Atestado]: '#7c3aed',
+  [StatusPresenca.Afastado]: '#b45309',
+  [StatusPresenca.Desligado]: '#991b1b',
+}
+
+/** Lista ordenada das siglas de AUSENCIA (exclui a presenca "X"). */
+export const SIGLAS_AUSENCIA: StatusPresenca[] = [
+  StatusPresenca.Folga,
+  StatusPresenca.Falta,
+  StatusPresenca.Ferias,
+  StatusPresenca.Atestado,
+  StatusPresenca.Afastado,
+  StatusPresenca.Desligado,
+]
+
+/** Todas as opcoes selecionaveis em uma celula da grade (inclui vazio). */
+export const OPCOES_CELULA: StatusPresenca[] = [
+  StatusPresenca.Presente,
+  ...SIGLAS_AUSENCIA,
+]
+
+// ---------------------------------------------------------------------
+// Modelo de dados
+// ---------------------------------------------------------------------
+
+export type StatusColaborador = 'ativo' | 'desligado'
+
+export interface Colaborador {
+  id: string
+  matricula: string
+  nome: string
+  setorId: string
+  turno: string
+  /** Codigo de turno/horario exibido na segunda linha da coluna. */
+  horario: string
+  status: StatusColaborador
+}
+
+export interface Setor {
+  id: string
+  nome: string
+}
+
+export interface TemaDDS {
+  id: string
+  ordem: number
+  tema: string
+  /** Mes de referencia (1-12). */
+  mes: number
+  /** Data prevista para o DDS (ISO yyyy-mm-dd). */
+  dataDDS: string
+}
+
+export type TipoLista = 'DDS' | 'GL'
+
+export interface ListaPresenca {
+  id: string
+  tipo: TipoLista
+  setorId: string
+  turno: string
+  /** Referencia textual do periodo (ex.: "Julho/2026" ou "Semana 27"). */
+  referencia: string
+  periodoInicio: string
+  periodoFim: string
+  supervisor: string
+}
+
+export interface RegistroPresenca {
+  colaboradorId: string
+  listaId: string
+  /** Chave do dia: numero do dia (GL) ou weekday index 0-6 (DDS). */
+  dia: number
+  status: StatusPresenca | ''
+}
+
+// ---------------------------------------------------------------------
+// Papeis de usuario e permissoes (role-based access)
+// ---------------------------------------------------------------------
+
+export type PapelUsuario = 'supervisor' | 'admin' | 'consulta'
+
+export interface Usuario {
+  nome: string
+  papel: PapelUsuario
+  empresa: string
+  unidade: string
+}
