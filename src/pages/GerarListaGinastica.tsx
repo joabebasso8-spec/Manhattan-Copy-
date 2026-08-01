@@ -86,17 +86,19 @@ export function GerarListaGinastica() {
     paginaAtual * POR_PAGINA + POR_PAGINA,
   )
 
-  // Status: registro manual > desligado > folga da escala > "X" nas sextas > branco.
+  // Status. A sexta-feira é o dia da ginástica: contém SEMPRE "X" (tem
+  // prioridade sobre folga, férias e qualquer outro lançamento). Nos demais
+  // dias: registro manual > desligado > folga da escala > branco.
   const getStatus = (cid: string, diaKey: number): StatusPresenca | '' => {
+    const data = dataDeChave(diaKey)
+    if (data.getDay() === 5) return StatusPresenca.Presente // sexta = X
     const reg = store.registros.find(
       (r) => r.listaId === lista.id && r.colaboradorId === cid && r.dia === diaKey,
     )
     if (reg) return reg.status
     const c = store.colaboradores.find((x) => x.id === cid)
     if (c?.status === 'desligado') return StatusPresenca.Desligado
-    const data = dataDeChave(diaKey)
     if (c?.escala && ehFolgaDaEscala(c.escala, data)) return StatusPresenca.Folga
-    if (data.getDay() === 5) return StatusPresenca.Presente // X nas sextas-feiras
     return ''
   }
 
