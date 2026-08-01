@@ -481,6 +481,8 @@ thead .pg-col-colab { z-index: 4; background: var(--azul-100); }
 .modal__full { grid-column: 1 / -1; }
 .modal label { display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; font-weight: 600; color: var(--cinza-700); }
 .modal input, .modal select { padding: 8px 10px; border: 1px solid var(--borda); border-radius: 6px; font-size: 13px; }
+.modal__dica { margin: 14px 0 0; font-size: 12px; color: var(--cinza-500); background: var(--azul-050); border: 1px dashed var(--borda); border-radius: 6px; padding: 8px 10px; }
+.modal select:disabled { background: var(--cinza-100); color: var(--cinza-700); cursor: not-allowed; }
 .modal__acoes { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
 
 /* =====================================================================

@@ -4,7 +4,7 @@ import { ColaboradorDialog } from '../components/ColaboradorDialog'
 import { DocumentHeader } from '../components/DocumentHeader'
 import { LegendaPanel } from '../components/LegendaPanel'
 import { PresenceGrid, type ColunaDia } from '../components/PresenceGrid'
-import type { Colaborador, StatusPresenca } from '../data/domain'
+import { folgasDaEscala, type Colaborador, type StatusPresenca } from '../data/domain'
 import { useStore } from '../data/store'
 
 const DIAS_SEMANA_ABREV = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
@@ -62,6 +62,18 @@ export function GerarListaGinastica() {
         colaboradores.map((c) => c.id),
       )
     }
+  }
+
+  // Converte dias da semana (0=Dom..6=Sáb) nos números de dia do mês correspondentes.
+  function diasDoMesPorWeekday(weekdays: number[]): number[] {
+    const inicio = new Date(lista.periodoInicio + 'T00:00:00')
+    const fim = new Date(lista.periodoFim + 'T00:00:00')
+    const dias: number[] = []
+    for (let d = inicio.getDate(); d <= fim.getDate(); d++) {
+      const data = new Date(inicio.getFullYear(), inicio.getMonth(), d)
+      if (weekdays.includes(data.getDay())) dias.push(d)
+    }
+    return dias
   }
 
   return (
@@ -176,12 +188,19 @@ export function GerarListaGinastica() {
       {dialog.aberto && (
         <ColaboradorDialog
           colaborador={dialog.alvo}
-          setores={setores}
-          setorPadrao={lista.setorId}
-          turnoPadrao={lista.turno}
           onSalvar={(c) => {
-            if ('id' in c) store.updateColaborador(c)
-            else store.addColaborador(c)
+            let id: string
+            if ('id' in c) {
+              store.updateColaborador(c)
+              id = c.id
+            } else {
+              id = store.addColaborador(c)
+            }
+            // Expande as folgas da escala (dias da semana) para os dias do mês.
+            if (c.escala) {
+              const weekdays = folgasDaEscala(c.escala, new Date().getDay())
+              store.aplicarFolgas(lista.id, id, diasDoMesPorWeekday(weekdays))
+            }
             setDialog({ aberto: false, alvo: null })
           }}
           onCancelar={() => setDialog({ aberto: false, alvo: null })}

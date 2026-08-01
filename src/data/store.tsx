@@ -49,9 +49,10 @@ interface StoreContextValue {
   // acoes
   definirPapel: (papel: PapelUsuario) => void
   setStatus: (listaId: string, colaboradorId: string, dia: number, status: StatusPresenca | '') => void
-  addColaborador: (c: Omit<Colaborador, 'id'>) => void
+  addColaborador: (c: Omit<Colaborador, 'id'>) => string
   updateColaborador: (c: Colaborador) => void
   removeColaborador: (id: string) => void
+  aplicarFolgas: (listaId: string, colaboradorId: string, dias: number[]) => void
   addTema: (t: Omit<TemaDDS, 'id'>) => void
   updateTema: (t: TemaDDS) => void
   removeTema: (id: string) => void
@@ -120,12 +121,34 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       })
     },
 
-    addColaborador: (c) => setColaboradores((prev) => [...prev, { ...c, id: novoId('c') }]),
+    addColaborador: (c) => {
+      const novo = { ...c, id: novoId('c') }
+      setColaboradores((prev) => [...prev, novo])
+      return novo.id
+    },
     updateColaborador: (c) =>
       setColaboradores((prev) => prev.map((x) => (x.id === c.id ? c : x))),
     removeColaborador: (id) => {
       setColaboradores((prev) => prev.filter((x) => x.id !== id))
       setRegistros((prev) => prev.filter((r) => r.colaboradorId !== id))
+    },
+
+    // Marca "FO" (folga) nos dias informados para um colaborador em uma lista.
+    aplicarFolgas: (listaId, colaboradorId, dias) => {
+      setRegistros((prev) => {
+        const copia = prev.slice()
+        for (const dia of dias) {
+          const idx = copia.findIndex(
+            (r) => r.listaId === listaId && r.colaboradorId === colaboradorId && r.dia === dia,
+          )
+          if (idx === -1) {
+            copia.push({ listaId, colaboradorId, dia, status: 'FO' as StatusPresenca })
+          } else {
+            copia[idx] = { ...copia[idx], status: 'FO' as StatusPresenca }
+          }
+        }
+        return copia
+      })
     },
 
     addTema: (t) => setTemas((prev) => [...prev, { ...t, id: novoId('t') }]),

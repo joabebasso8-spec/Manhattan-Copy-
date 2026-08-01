@@ -63,6 +63,42 @@ export const OPCOES_CELULA: StatusPresenca[] = [
 
 export type StatusColaborador = 'ativo' | 'desligado'
 
+/** Escalas de trabalho (regime 6x2 — trabalha 6 dias, folga 2). */
+export type Escala = 'F' | 'H' | 'B' | 'D'
+
+export const ESCALAS: Escala[] = ['F', 'H', 'B', 'D']
+
+/** Setor fixo dos colaboradores cadastrados pelo formulario. */
+export const SETOR_PADRAO = { id: 'st-fundicao-garol', nome: 'Fundição Manual Garol' }
+
+/** Opcoes fixas de turno no cadastro de colaborador. */
+export const TURNOS: string[] = ['Manhã', 'Tarde', 'Noite']
+
+/** Opcoes fixas de horario no cadastro de colaborador. */
+export const HORARIOS: string[] = ['06:00 às 14:20', '14:20 às 22:40', '22:40 às 06:00']
+
+// Dias da semana como indices: 0=Dom, 1=Seg, 2=Ter, 3=Qua, 4=Qui, 5=Sex, 6=Sab.
+/**
+ * Retorna os dias de folga (indices de dia da semana, 0=Dom..6=Sab) de uma
+ * escala, tomando a semana atual como base. Regime 6x2 (folga 2 dias):
+ *  - F: quarta e quinta
+ *  - H: hoje e amanha (relativo ao dia atual)
+ *  - B: domingo e segunda
+ *  - D: terca e quarta
+ */
+export function folgasDaEscala(escala: Escala, hojeWeekday: number): number[] {
+  switch (escala) {
+    case 'F':
+      return [3, 4]
+    case 'H':
+      return [hojeWeekday % 7, (hojeWeekday + 1) % 7]
+    case 'B':
+      return [0, 1]
+    case 'D':
+      return [2, 3]
+  }
+}
+
 export interface Colaborador {
   id: string
   matricula: string
@@ -72,6 +108,8 @@ export interface Colaborador {
   /** Codigo de turno/horario exibido na segunda linha da coluna. */
   horario: string
   status: StatusColaborador
+  /** Escala de trabalho (opcional) usada para auto-preencher folgas. */
+  escala?: Escala
 }
 
 export interface Setor {

@@ -4,7 +4,7 @@ import { ColaboradorDialog } from '../components/ColaboradorDialog'
 import { DocumentHeader } from '../components/DocumentHeader'
 import { LegendaPanel } from '../components/LegendaPanel'
 import { PresenceGrid, type ColunaDia } from '../components/PresenceGrid'
-import type { Colaborador, StatusPresenca } from '../data/domain'
+import { folgasDaEscala, type Colaborador, type StatusPresenca } from '../data/domain'
 import { useStore } from '../data/store'
 
 const DIAS_SEMANA = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado']
@@ -175,12 +175,18 @@ export function GerarListaDDS() {
       {dialog.aberto && (
         <ColaboradorDialog
           colaborador={dialog.alvo}
-          setores={setores}
-          setorPadrao={lista.setorId}
-          turnoPadrao={lista.turno}
           onSalvar={(c) => {
-            if ('id' in c) store.updateColaborador(c)
-            else store.addColaborador(c)
+            let id: string
+            if ('id' in c) {
+              store.updateColaborador(c)
+              id = c.id
+            } else {
+              id = store.addColaborador(c)
+            }
+            // Preenche as folgas da semana conforme a escala (dias = índice do dia da semana).
+            if (c.escala) {
+              store.aplicarFolgas(lista.id, id, folgasDaEscala(c.escala, new Date().getDay()))
+            }
             setDialog({ aberto: false, alvo: null })
           }}
           onCancelar={() => setDialog({ aberto: false, alvo: null })}

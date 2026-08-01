@@ -1,35 +1,41 @@
 // Modal simples para adicionar ou editar um colaborador.
 import { useState } from 'react'
-import type { Colaborador, Setor } from '../data/domain'
+import {
+  ESCALAS,
+  HORARIOS,
+  SETOR_PADRAO,
+  TURNOS,
+  type Colaborador,
+  type Escala,
+} from '../data/domain'
 
 interface Props {
   colaborador: Colaborador | null // null = novo
-  setores: Setor[]
-  setorPadrao: string
-  turnoPadrao: string
   onSalvar: (c: Colaborador | Omit<Colaborador, 'id'>) => void
   onCancelar: () => void
 }
 
-export function ColaboradorDialog({
-  colaborador,
-  setores,
-  setorPadrao,
-  turnoPadrao,
-  onSalvar,
-  onCancelar,
-}: Props) {
+export function ColaboradorDialog({ colaborador, onSalvar, onCancelar }: Props) {
   const [matricula, setMatricula] = useState(colaborador?.matricula ?? '')
   const [nome, setNome] = useState(colaborador?.nome ?? '')
-  const [setorId, setSetorId] = useState(colaborador?.setorId ?? setorPadrao)
-  const [turno, setTurno] = useState(colaborador?.turno ?? turnoPadrao)
-  const [horario, setHorario] = useState(colaborador?.horario ?? '06:00–14:20')
-  const [status, setStatus] = useState<Colaborador['status']>(colaborador?.status ?? 'ativo')
+  const [turno, setTurno] = useState(colaborador?.turno ?? TURNOS[0])
+  const [horario, setHorario] = useState(colaborador?.horario ?? HORARIOS[0])
+  const [escala, setEscala] = useState<Escala | ''>(colaborador?.escala ?? '')
 
   function submeter(e: React.FormEvent) {
     e.preventDefault()
     if (!matricula.trim() || !nome.trim()) return
-    const base = { matricula: matricula.trim(), nome: nome.trim(), setorId, turno, horario, status }
+    const base = {
+      matricula: matricula.trim(),
+      nome: nome.trim(),
+      // Setor sempre "Fundição Manual Garol".
+      setorId: SETOR_PADRAO.id,
+      turno,
+      horario,
+      // Status nao e mais editado no formulario; novos colaboradores nascem ativos.
+      status: colaborador?.status ?? ('ativo' as const),
+      escala: escala || undefined,
+    }
     onSalvar(colaborador ? { ...base, id: colaborador.id } : base)
   }
 
@@ -50,33 +56,46 @@ export function ColaboradorDialog({
           </label>
           <label>
             Setor
-            <select value={setorId} onChange={(e) => setSetorId(e.target.value)}>
-              {setores.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.nome}
+            <select value={SETOR_PADRAO.id} disabled>
+              <option value={SETOR_PADRAO.id}>{SETOR_PADRAO.nome}</option>
+            </select>
+          </label>
+          <label>
+            Turno
+            <select value={turno} onChange={(e) => setTurno(e.target.value)}>
+              {TURNOS.map((t) => (
+                <option key={t} value={t}>
+                  {t}
                 </option>
               ))}
             </select>
           </label>
           <label>
-            Turno
-            <input value={turno} onChange={(e) => setTurno(e.target.value)} />
-          </label>
-          <label>
             Horário
-            <input value={horario} onChange={(e) => setHorario(e.target.value)} />
+            <select value={horario} onChange={(e) => setHorario(e.target.value)}>
+              {HORARIOS.map((h) => (
+                <option key={h} value={h}>
+                  {h}
+                </option>
+              ))}
+            </select>
           </label>
           <label>
-            Status
-            <select
-              value={status}
-              onChange={(e) => setStatus(e.target.value as Colaborador['status'])}
-            >
-              <option value="ativo">Ativo</option>
-              <option value="desligado">Desligado</option>
+            Escala
+            <select value={escala} onChange={(e) => setEscala(e.target.value as Escala | '')}>
+              <option value="">— selecione —</option>
+              {ESCALAS.map((e) => (
+                <option key={e} value={e}>
+                  {e}
+                </option>
+              ))}
             </select>
           </label>
         </div>
+        <p className="modal__dica">
+          Ao definir uma <strong>Escala</strong>, as folgas do colaborador são preenchidas
+          automaticamente na semana (regime 6×2).
+        </p>
         <div className="modal__acoes">
           <button type="button" className="btn btn--ghost" onClick={onCancelar}>
             Cancelar

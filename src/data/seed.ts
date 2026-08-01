@@ -21,6 +21,7 @@ export const USUARIO_LOGADO: Usuario = {
 }
 
 export const SETORES: Setor[] = [
+  { id: 'st-fundicao-garol', nome: 'Fundição Manual Garol' },
   { id: 'st-esmaltacao', nome: 'Esmaltação' },
   { id: 'st-fornos', nome: 'Fornos' },
   { id: 'st-prensas', nome: 'Prensas' },
