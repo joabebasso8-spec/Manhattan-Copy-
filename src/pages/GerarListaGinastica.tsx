@@ -5,21 +5,47 @@ import { DocumentHeader } from '../components/DocumentHeader'
 import { LegendaPanel } from '../components/LegendaPanel'
 import { PresenceGrid, type ColunaDia } from '../components/PresenceGrid'
 import { PrintSheet, type ColunaImpressao } from '../components/PrintSheet'
-import { ehFolgaDaEscala, StatusPresenca, TURNOS, turnoOrdinal, type Colaborador } from '../data/domain'
+import {
+  chaveData,
+  dataDeChave,
+  ehFolgaDaEscala,
+  StatusPresenca,
+  TURNOS,
+  turnoOrdinal,
+  type Colaborador,
+} from '../data/domain'
 import { HOJE } from '../data/seed'
 import { useStore } from '../data/store'
 
 const DIAS_SEMANA_ABREV = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
+const MESES = [
+  'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+  'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro',
+]
 const POR_PAGINA = 10
 const TODOS = 'Todos os turnos'
+
+/** Lista de meses (ano-mês) para o seletor. */
+const MESES_OPCOES: { iso: string; label: string }[] = (() => {
+  const res: { iso: string; label: string }[] = []
+  for (let ano = 2026; ano <= 2027; ano++) {
+    for (let m = 0; m < 12; m++) {
+      res.push({ iso: `${ano}-${String(m + 1).padStart(2, '0')}`, label: `${MESES[m]} / ${ano}` })
+    }
+  }
+  return res
+})()
 
 export function GerarListaGinastica() {
   const store = useStore()
   const { listaGinastica: lista, setores, usuario } = store
 
+  const mesPadrao = lista.periodoInicio.slice(0, 7) // "2026-07"
+
   const [pagina, setPagina] = useState(0)
   const [textSize, setTextSize] = useState<'sm' | 'md' | 'lg'>('md')
   const [turnoFiltro, setTurnoFiltro] = useState<string>(TODOS)
+  const [mesIso, setMesIso] = useState<string>(mesPadrao)
   const [mostrarFiltro, setMostrarFiltro] = useState(false)
   const [dialog, setDialog] = useState<{ aberto: boolean; alvo: Colaborador | null }>({
     aberto: false,
@@ -27,21 +53,22 @@ export function GerarListaGinastica() {
   })
 
   const setorNome = setores.find((s) => s.id === lista.setorId)?.nome ?? '—'
-  const inicioMes = new Date(lista.periodoInicio + 'T00:00:00')
-  const dataDoDia = (dia: number) =>
-    new Date(inicioMes.getFullYear(), inicioMes.getMonth(), dia)
+  const [ano, mes] = mesIso.split('-').map(Number) // mes 1-12
+  const primeiroDia = new Date(ano, mes - 1, 1)
+  const ultimoDia = new Date(ano, mes, 0) // dia 0 do mês seguinte = último do atual
+  const mesLabel = `${MESES[mes - 1]} / ${ano}`
 
-  // Colunas: apenas dias úteis do mês (sábados e domingos são excluídos).
+  // Colunas: apenas dias úteis (seg–sex) do mês selecionado. dia = chave AAAAMMDD.
   const colunas: ColunaDia[] = useMemo(() => {
-    const fim = new Date(lista.periodoFim + 'T00:00:00')
     const cols: ColunaDia[] = []
-    for (let dia = inicioMes.getDate(); dia <= fim.getDate(); dia++) {
-      const dow = new Date(inicioMes.getFullYear(), inicioMes.getMonth(), dia).getDay()
+    for (let dia = 1; dia <= ultimoDia.getDate(); dia++) {
+      const data = new Date(ano, mes - 1, dia)
+      const dow = data.getDay()
       if (dow === 0 || dow === 6) continue
-      cols.push({ dia, label: String(dia), sub: DIAS_SEMANA_ABREV[dow] })
+      cols.push({ dia: chaveData(data), label: String(dia), sub: DIAS_SEMANA_ABREV[dow] })
     }
     return cols
-  }, [lista.periodoInicio, lista.periodoFim])
+  }, [mesIso])
 
   const colunasImpressao: ColunaImpressao[] = colunas.map((c) => ({
     key: c.dia,
@@ -59,14 +86,15 @@ export function GerarListaGinastica() {
     paginaAtual * POR_PAGINA + POR_PAGINA,
   )
 
-  // Status de uma célula: registro manual > folga da escala > "X" nas sextas > branco.
-  const getStatus = (cid: string, dia: number): StatusPresenca | '' => {
+  // Status: registro manual > desligado > folga da escala > "X" nas sextas > branco.
+  const getStatus = (cid: string, diaKey: number): StatusPresenca | '' => {
     const reg = store.registros.find(
-      (r) => r.listaId === lista.id && r.colaboradorId === cid && r.dia === dia,
+      (r) => r.listaId === lista.id && r.colaboradorId === cid && r.dia === diaKey,
     )
     if (reg) return reg.status
     const c = store.colaboradores.find((x) => x.id === cid)
-    const data = dataDoDia(dia)
+    if (c?.status === 'desligado') return StatusPresenca.Desligado
+    const data = dataDeChave(diaKey)
     if (c?.escala && ehFolgaDaEscala(c.escala, data)) return StatusPresenca.Folga
     if (data.getDay() === 5) return StatusPresenca.Presente // X nas sextas-feiras
     return ''
@@ -89,6 +117,22 @@ export function GerarListaGinastica() {
 
       {mostrarFiltro && (
         <div className="filtro-bar">
+          <label className="filtro-bar__campo">
+            Mês
+            <select
+              value={mesIso}
+              onChange={(e) => {
+                setMesIso(e.target.value)
+                setPagina(0)
+              }}
+            >
+              {MESES_OPCOES.map((m) => (
+                <option key={m.iso} value={m.iso}>
+                  {m.label}
+                </option>
+              ))}
+            </select>
+          </label>
           <label className="filtro-bar__campo">
             Turno para impressão
             <select
@@ -118,12 +162,11 @@ export function GerarListaGinastica() {
           <dl className="ctx-panel__dl">
             <div><dt>Setor</dt><dd>{setorNome}</dd></div>
             <div><dt>Turno</dt><dd>{turnoFiltro}</dd></div>
-            <div><dt>Mês</dt><dd>{lista.referencia}</dd></div>
+            <div><dt>Mês</dt><dd>{mesLabel}</dd></div>
             <div>
               <dt>Período</dt>
               <dd>
-                {new Date(lista.periodoInicio + 'T00:00:00').toLocaleDateString('pt-BR')} a{' '}
-                {new Date(lista.periodoFim + 'T00:00:00').toLocaleDateString('pt-BR')}
+                {primeiroDia.toLocaleDateString('pt-BR')} a {ultimoDia.toLocaleDateString('pt-BR')}
               </dd>
             </div>
             <div><dt>Supervisor</dt><dd>{lista.supervisor}</dd></div>
@@ -217,12 +260,12 @@ export function GerarListaGinastica() {
         usuario={usuario.nome}
         empresa={usuario.empresa}
         unidade={usuario.unidade}
-        refCabecalho="7/2026"
+        refCabecalho={`${mes}/${ano}`}
         setorNome={setorNome}
         turnoLabel={turnoFiltro === TODOS ? 'Todos os turnos' : turnoOrdinal(turnoFiltro)}
-        mes="julho"
+        mes={MESES[mes - 1].toLowerCase()}
         periodoRotulo="Período"
-        periodoValor={`de ${new Date(lista.periodoInicio + 'T00:00:00').toLocaleDateString('pt-BR')} a ${new Date(lista.periodoFim + 'T00:00:00').toLocaleDateString('pt-BR')}`}
+        periodoValor={`de ${primeiroDia.toLocaleDateString('pt-BR')} a ${ultimoDia.toLocaleDateString('pt-BR')}`}
         supervisor={lista.supervisor}
         meio={
           <>

@@ -4,6 +4,7 @@
 // =====================================================================
 
 import {
+  chaveData,
   StatusPresenca,
   type Colaborador,
   type Setor,
@@ -98,42 +99,25 @@ export const LISTA_DDS: ListaPresenca = {
   supervisor: 'Carlos Andrade',
 }
 
-// Gera registros ficticios apenas para AUSENCIAS; dias trabalhados ficam em
-// branco (o estado normal, assinado fisicamente na lista impressa).
-function gerarRegistrosGinastica(): RegistroPresenca[] {
-  const registros: RegistroPresenca[] = []
-  const diasNoMes = 31
-  COLABORADORES.forEach((c, ci) => {
-    for (let dia = 1; dia <= diasNoMes; dia++) {
-      let status: StatusPresenca | '' = ''
-      if (c.status === 'desligado' && dia > 10) status = StatusPresenca.Desligado
-      else if (ci === 4 && dia >= 14 && dia <= 20) status = StatusPresenca.Ferias
-      else if (ci === 7 && (dia === 9 || dia === 10)) status = StatusPresenca.Atestado
-      // demais dias (inclusive fins de semana): em branco (presenca por assinatura)
-      if (status !== '') registros.push({ colaboradorId: c.id, listaId: LISTA_GINASTICA.id, dia, status })
-    }
-  })
-  return registros
-}
-
-function gerarRegistrosDDS(): RegistroPresenca[] {
-  const registros: RegistroPresenca[] = []
-  // dia = weekday index 0 (Dom) a 6 (Sab)
-  COLABORADORES.forEach((c, ci) => {
-    for (let d = 0; d <= 6; d++) {
-      let status: StatusPresenca | '' = ''
-      if (c.status === 'desligado') status = StatusPresenca.Desligado
-      else if (ci === 2 && d === 3) status = StatusPresenca.Falta
-      // demais dias (inclusive fins de semana): em branco (presenca por assinatura)
-      if (status !== '') registros.push({ colaboradorId: c.id, listaId: LISTA_DDS.id, dia: d, status })
-    }
-  })
-  return registros
+// Lançamentos manuais de exemplo, ancorados na DATA real (chave AAAAMMDD).
+// Folgas (escala), presença (X) e desligamento são DERIVADOS na tela, não
+// ficam gravados aqui. Só entram ausências pontuais lançadas "à mão".
+function reg(colaboradorId: string, listaId: string, iso: string, status: StatusPresenca): RegistroPresenca {
+  return { colaboradorId, listaId, dia: chaveData(new Date(iso + 'T00:00:00')), status }
 }
 
 export const REGISTROS_INICIAIS: RegistroPresenca[] = [
-  ...gerarRegistrosGinastica(),
-  ...gerarRegistrosDDS(),
+  // Eduarda (c05) de férias em julho — na lista de Ginástica.
+  reg('c05', LISTA_GINASTICA.id, '2026-07-14', StatusPresenca.Ferias),
+  reg('c05', LISTA_GINASTICA.id, '2026-07-15', StatusPresenca.Ferias),
+  reg('c05', LISTA_GINASTICA.id, '2026-07-16', StatusPresenca.Ferias),
+  reg('c05', LISTA_GINASTICA.id, '2026-07-17', StatusPresenca.Ferias),
+  reg('c05', LISTA_GINASTICA.id, '2026-07-20', StatusPresenca.Ferias),
+  // Henrique (c08) com atestado — na lista de Ginástica.
+  reg('c08', LISTA_GINASTICA.id, '2026-07-09', StatusPresenca.Atestado),
+  reg('c08', LISTA_GINASTICA.id, '2026-07-10', StatusPresenca.Atestado),
+  // Camila (c03) faltou na quarta 29/07 — na lista de DDS.
+  reg('c03', LISTA_DDS.id, '2026-07-29', StatusPresenca.Falta),
 ]
 
 export { HOJE }

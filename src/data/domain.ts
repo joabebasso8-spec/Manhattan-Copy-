@@ -106,6 +106,19 @@ const ANCORA_ESCALA: Record<Escala, string> = {
 
 const MS_DIA = 86400000
 
+/** Codifica uma data como número AAAAMMDD (chave estável por data real). */
+export function chaveData(data: Date): number {
+  return data.getFullYear() * 10000 + (data.getMonth() + 1) * 100 + data.getDate()
+}
+
+/** Reconstrói a data a partir da chave AAAAMMDD. */
+export function dataDeChave(chave: number): Date {
+  const ano = Math.floor(chave / 10000)
+  const mes = Math.floor(chave / 100) % 100
+  const dia = chave % 100
+  return new Date(ano, mes - 1, dia)
+}
+
 /** Diferença em dias inteiros entre duas datas (ignora horas/fuso). */
 function diffEmDias(a: Date, b: Date): number {
   const da = Date.UTC(a.getFullYear(), a.getMonth(), a.getDate())

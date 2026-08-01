@@ -5,7 +5,15 @@ import { DocumentHeader } from '../components/DocumentHeader'
 import { LegendaPanel } from '../components/LegendaPanel'
 import { PresenceGrid, type ColunaDia } from '../components/PresenceGrid'
 import { PrintSheet, type ColunaImpressao } from '../components/PrintSheet'
-import { ehFolgaDaEscala, StatusPresenca, TURNOS, turnoOrdinal, type Colaborador } from '../data/domain'
+import {
+  chaveData,
+  dataDeChave,
+  ehFolgaDaEscala,
+  StatusPresenca,
+  TURNOS,
+  turnoOrdinal,
+  type Colaborador,
+} from '../data/domain'
 import { HOJE } from '../data/seed'
 import { useStore } from '../data/store'
 
@@ -14,13 +22,40 @@ const DIAS_SEMANA_ABREV = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
 const POR_PAGINA = 10
 const TODOS = 'Todos os turnos'
 
+const isoLocal = (d: Date) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+const ddMM = (d: Date) => d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
+
+/** Domingo (início) da semana que contém a data informada. */
+function domingoDaSemana(d: Date): Date {
+  const x = new Date(d.getFullYear(), d.getMonth(), d.getDate())
+  x.setDate(x.getDate() - x.getDay())
+  return x
+}
+
+/** Lista de semanas (domingo a sábado) para o seletor. */
+const SEMANAS: { iso: string; label: string }[] = (() => {
+  const res: { iso: string; label: string }[] = []
+  const d = domingoDaSemana(new Date(2026, 0, 1))
+  for (let i = 0; i < 60; i++) {
+    const fim = new Date(d)
+    fim.setDate(d.getDate() + 6)
+    res.push({ iso: isoLocal(d), label: `${ddMM(d)} a ${ddMM(fim)}` })
+    d.setDate(d.getDate() + 7)
+  }
+  return res
+})()
+
 export function GerarListaDDS() {
   const store = useStore()
   const { listaDDS: lista, setores, temas, usuario } = store
 
+  const semanaPadrao = isoLocal(domingoDaSemana(new Date(lista.periodoInicio + 'T00:00:00')))
+
   const [pagina, setPagina] = useState(0)
   const [textSize, setTextSize] = useState<'sm' | 'md' | 'lg'>('md')
   const [turnoFiltro, setTurnoFiltro] = useState<string>(TODOS)
+  const [semanaIso, setSemanaIso] = useState<string>(semanaPadrao)
   const [mostrarFiltro, setMostrarFiltro] = useState(false)
   const [dialog, setDialog] = useState<{ aberto: boolean; alvo: Colaborador | null }>({
     aberto: false,
@@ -29,43 +64,42 @@ export function GerarListaDDS() {
 
   const setorNome = setores.find((s) => s.id === lista.setorId)?.nome ?? '—'
 
-  // Datas de cada dia da semana a partir do inicio do periodo.
-  const inicio = new Date(lista.periodoInicio + 'T00:00:00')
+  // Datas dos sete dias da semana selecionada (domingo a sábado).
   const diasDaSemana = useMemo(() => {
-    // Alinha o inicio ao domingo da semana.
-    const domingo = new Date(inicio)
-    domingo.setDate(inicio.getDate() - inicio.getDay())
+    const domingo = new Date(semanaIso + 'T00:00:00')
     return Array.from({ length: 7 }, (_, i) => {
       const d = new Date(domingo)
       d.setDate(domingo.getDate() + i)
       return d
     })
-  }, [lista.periodoInicio])
+  }, [semanaIso])
 
-  const colunas: ColunaDia[] = DIAS_SEMANA.map((_nome, i) => ({
-    dia: i,
+  const semanaFim = diasDaSemana[6]
+  const semanaLabel = `${ddMM(diasDaSemana[0])} a ${ddMM(semanaFim)}`
+
+  // Colunas da tela: dia = chave AAAAMMDD da data real.
+  const colunas: ColunaDia[] = diasDaSemana.map((data, i) => ({
+    dia: chaveData(data),
     label: DIAS_SEMANA_ABREV[i],
-    sub: diasDaSemana[i].toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
+    sub: ddMM(data),
   }))
 
-  // Colunas da IMPRESSÃO: os sete dias da semana com nome completo (como no PDF).
-  const colunasImpressao: ColunaImpressao[] = DIAS_SEMANA.map((nome, i) => ({
-    key: i,
-    label: nome,
+  // Colunas da impressão: nome completo do dia da semana.
+  const colunasImpressao: ColunaImpressao[] = diasDaSemana.map((data, i) => ({
+    key: chaveData(data),
+    label: DIAS_SEMANA[i],
   }))
 
-  // Temas da semana casados com o dia correspondente (por data).
-  const temasDaSemana = useMemo(() => {
-    const isoLocal = (d: Date) =>
-      `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(
-        d.getDate(),
-      ).padStart(2, '0')}`
-    return diasDaSemana.map((data, i) => {
-      const iso = isoLocal(data)
-      const tema = temas.find((t) => t.dataDDS === iso)
-      return { dia: DIAS_SEMANA[i], data, tema }
-    })
-  }, [diasDaSemana, temas])
+  // Temas da semana casados por data.
+  const temasDaSemana = useMemo(
+    () =>
+      diasDaSemana.map((data, i) => ({
+        dia: DIAS_SEMANA[i],
+        data,
+        tema: temas.find((t) => t.dataDDS === isoLocal(data)),
+      })),
+    [diasDaSemana, temas],
+  )
 
   const colaboradores = store.colaboradores.filter(
     (c) => turnoFiltro === TODOS || c.turno === turnoFiltro,
@@ -74,15 +108,15 @@ export function GerarListaDDS() {
   const paginaAtual = Math.min(pagina, totalPaginas - 1)
   const fatia = colaboradores.slice(paginaAtual * POR_PAGINA, paginaAtual * POR_PAGINA + POR_PAGINA)
 
-  // Status de uma célula: registro manual > folga da escala (por data) > branco.
-  // dia = índice do dia da semana (0=Dom..6=Sáb).
-  const getStatus = (cid: string, dia: number): StatusPresenca | '' => {
+  // Status: registro manual > desligado > folga da escala (por data) > branco.
+  const getStatus = (cid: string, diaKey: number): StatusPresenca | '' => {
     const reg = store.registros.find(
-      (r) => r.listaId === lista.id && r.colaboradorId === cid && r.dia === dia,
+      (r) => r.listaId === lista.id && r.colaboradorId === cid && r.dia === diaKey,
     )
     if (reg) return reg.status
     const c = store.colaboradores.find((x) => x.id === cid)
-    if (c?.escala && ehFolgaDaEscala(c.escala, diasDaSemana[dia])) return StatusPresenca.Folga
+    if (c?.status === 'desligado') return StatusPresenca.Desligado
+    if (c?.escala && ehFolgaDaEscala(c.escala, dataDeChave(diaKey))) return StatusPresenca.Folga
     return ''
   }
 
@@ -103,6 +137,22 @@ export function GerarListaDDS() {
 
       {mostrarFiltro && (
         <div className="filtro-bar">
+          <label className="filtro-bar__campo">
+            Semana
+            <select
+              value={semanaIso}
+              onChange={(e) => {
+                setSemanaIso(e.target.value)
+                setPagina(0)
+              }}
+            >
+              {SEMANAS.map((s) => (
+                <option key={s.iso} value={s.iso}>
+                  {s.label}
+                </option>
+              ))}
+            </select>
+          </label>
           <label className="filtro-bar__campo">
             Turno para impressão
             <select
@@ -132,7 +182,7 @@ export function GerarListaDDS() {
           <dl className="ctx-panel__dl">
             <div><dt>Setor</dt><dd>{setorNome}</dd></div>
             <div><dt>Turno</dt><dd>{turnoFiltro}</dd></div>
-            <div><dt>Semana</dt><dd>{lista.referencia}</dd></div>
+            <div><dt>Semana</dt><dd>{semanaLabel}</dd></div>
             <div><dt>Supervisor</dt><dd>{lista.supervisor}</dd></div>
           </dl>
           <div className="ctx-panel__pausa">
@@ -148,9 +198,7 @@ export function GerarListaDDS() {
               <li key={t.dia} className="temas-panel__item">
                 <span className="temas-panel__dia">
                   {t.dia}
-                  <span className="temas-panel__data">
-                    {t.data.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}
-                  </span>
+                  <span className="temas-panel__data">{ddMM(t.data)}</span>
                 </span>
                 <span className="temas-panel__tema">
                   {t.tema ? t.tema.tema : <em>— sem tema —</em>}
@@ -239,9 +287,9 @@ export function GerarListaDDS() {
         refCabecalho="7/2026"
         setorNome={setorNome}
         turnoLabel={turnoFiltro === TODOS ? 'Todos os turnos' : turnoOrdinal(turnoFiltro)}
-        mes="julho"
+        mes={diasDaSemana[0].toLocaleDateString('pt-BR', { month: 'long' })}
         periodoRotulo="Semana"
-        periodoValor={lista.referencia.replace('Semana 31 — ', 'de ').replace(' a ', ' a ')}
+        periodoValor={`de ${diasDaSemana[0].toLocaleDateString('pt-BR')} a ${semanaFim.toLocaleDateString('pt-BR')}`}
         supervisor={lista.supervisor}
         pausas="09:20 às 09:35 · 12:00 às 13:00"
         meio={
@@ -251,9 +299,7 @@ export function GerarListaDDS() {
               <tbody>
                 {temasDaSemana.map((t) => (
                   <tr key={t.dia}>
-                    <td className="ps-temas__data">
-                      {t.data.toLocaleDateString('pt-BR')}
-                    </td>
+                    <td className="ps-temas__data">{t.data.toLocaleDateString('pt-BR')}</td>
                     <td className="ps-temas__tema">{t.tema ? t.tema.tema : '—'}</td>
                   </tr>
                 ))}
