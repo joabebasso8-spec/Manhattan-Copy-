@@ -29,22 +29,32 @@ export const SETORES: Setor[] = [
   { id: 'st-manutencao', nome: 'Manutenção' },
 ]
 
-// 14 colaboradores ficticios para demonstrar a paginacao (10 por pagina).
+// Colaboradores ficticios distribuidos nos tres turnos (Manha, Tarde, Noite),
+// todos do setor Fundicao Manual Garol. Servem para demonstrar o filtro por
+// turno e a paginacao.
+const MANHA = '06:00 às 14:20'
+const TARDE = '14:20 às 22:40'
+const NOITE = '22:40 às 06:00'
+const SETOR = 'st-fundicao-garol'
+
 export const COLABORADORES: Colaborador[] = [
-  { id: 'c01', matricula: '10234', nome: 'Ana Beatriz Ferreira', setorId: 'st-esmaltacao', turno: 'T1', horario: '06:00–14:20', status: 'ativo' },
-  { id: 'c02', matricula: '10245', nome: 'Bruno Carvalho Lima', setorId: 'st-esmaltacao', turno: 'T1', horario: '06:00–14:20', status: 'ativo' },
-  { id: 'c03', matricula: '10251', nome: 'Camila Souza Rocha', setorId: 'st-esmaltacao', turno: 'T1', horario: '06:00–14:20', status: 'ativo' },
-  { id: 'c04', matricula: '10260', nome: 'Diego Nascimento Alves', setorId: 'st-esmaltacao', turno: 'T1', horario: '06:00–14:20', status: 'ativo' },
-  { id: 'c05', matricula: '10277', nome: 'Eduarda Martins Pinto', setorId: 'st-esmaltacao', turno: 'T1', horario: '06:00–14:20', status: 'ativo' },
-  { id: 'c06', matricula: '10281', nome: 'Fábio Oliveira Ramos', setorId: 'st-esmaltacao', turno: 'T1', horario: '06:00–14:20', status: 'ativo' },
-  { id: 'c07', matricula: '10298', nome: 'Gabriela Dias Moreira', setorId: 'st-esmaltacao', turno: 'T1', horario: '06:00–14:20', status: 'ativo' },
-  { id: 'c08', matricula: '10305', nome: 'Henrique Barbosa Cruz', setorId: 'st-esmaltacao', turno: 'T1', horario: '06:00–14:20', status: 'ativo' },
-  { id: 'c09', matricula: '10312', nome: 'Isabela Cardoso Nunes', setorId: 'st-esmaltacao', turno: 'T1', horario: '06:00–14:20', status: 'ativo' },
-  { id: 'c10', matricula: '10327', nome: 'João Pedro Teixeira', setorId: 'st-esmaltacao', turno: 'T1', horario: '06:00–14:20', status: 'ativo' },
-  { id: 'c11', matricula: '10334', nome: 'Karina Lopes Almeida', setorId: 'st-esmaltacao', turno: 'T1', horario: '06:00–14:20', status: 'ativo' },
-  { id: 'c12', matricula: '10349', nome: 'Lucas Gomes Ribeiro', setorId: 'st-esmaltacao', turno: 'T1', horario: '06:00–14:20', status: 'ativo' },
-  { id: 'c13', matricula: '10356', nome: 'Mariana Freitas Costa', setorId: 'st-esmaltacao', turno: 'T1', horario: '06:00–14:20', status: 'ativo' },
-  { id: 'c14', matricula: '10361', nome: 'Nathan Vieira Santos', setorId: 'st-esmaltacao', turno: 'T1', horario: '06:00–14:20', status: 'desligado' },
+  // Turno da Manhã
+  { id: 'c01', matricula: '10234', nome: 'Ana Beatriz Ferreira', setorId: SETOR, turno: 'Manhã', horario: MANHA, status: 'ativo' },
+  { id: 'c02', matricula: '10245', nome: 'Bruno Carvalho Lima', setorId: SETOR, turno: 'Manhã', horario: MANHA, status: 'ativo' },
+  { id: 'c03', matricula: '10251', nome: 'Camila Souza Rocha', setorId: SETOR, turno: 'Manhã', horario: MANHA, status: 'ativo' },
+  { id: 'c04', matricula: '10260', nome: 'Diego Nascimento Alves', setorId: SETOR, turno: 'Manhã', horario: MANHA, status: 'ativo' },
+  { id: 'c05', matricula: '10277', nome: 'Eduarda Martins Pinto', setorId: SETOR, turno: 'Manhã', horario: MANHA, status: 'ativo' },
+  // Turno da Tarde
+  { id: 'c06', matricula: '10281', nome: 'Fábio Oliveira Ramos', setorId: SETOR, turno: 'Tarde', horario: TARDE, status: 'ativo' },
+  { id: 'c07', matricula: '10298', nome: 'Gabriela Dias Moreira', setorId: SETOR, turno: 'Tarde', horario: TARDE, status: 'ativo' },
+  { id: 'c08', matricula: '10305', nome: 'Henrique Barbosa Cruz', setorId: SETOR, turno: 'Tarde', horario: TARDE, status: 'ativo' },
+  { id: 'c09', matricula: '10312', nome: 'Isabela Cardoso Nunes', setorId: SETOR, turno: 'Tarde', horario: TARDE, status: 'ativo' },
+  { id: 'c10', matricula: '10327', nome: 'João Pedro Teixeira', setorId: SETOR, turno: 'Tarde', horario: TARDE, status: 'ativo' },
+  // Turno da Noite
+  { id: 'c11', matricula: '10334', nome: 'Karina Lopes Almeida', setorId: SETOR, turno: 'Noite', horario: NOITE, status: 'ativo' },
+  { id: 'c12', matricula: '10349', nome: 'Lucas Gomes Ribeiro', setorId: SETOR, turno: 'Noite', horario: NOITE, status: 'ativo' },
+  { id: 'c13', matricula: '10356', nome: 'Mariana Freitas Costa', setorId: SETOR, turno: 'Noite', horario: NOITE, status: 'ativo' },
+  { id: 'c14', matricula: '10361', nome: 'Nathan Vieira Santos', setorId: SETOR, turno: 'Noite', horario: NOITE, status: 'desligado' },
 ]
 
 export const TEMAS_DDS: TemaDDS[] = [
@@ -69,8 +79,8 @@ const HOJE = '2026-07-30'
 export const LISTA_GINASTICA: ListaPresenca = {
   id: 'lst-gl-2026-07',
   tipo: 'GL',
-  setorId: 'st-esmaltacao',
-  turno: 'T1',
+  setorId: 'st-fundicao-garol',
+  turno: 'Manhã',
   referencia: 'Julho / 2026',
   periodoInicio: '2026-07-01',
   periodoFim: '2026-07-31',
@@ -80,15 +90,16 @@ export const LISTA_GINASTICA: ListaPresenca = {
 export const LISTA_DDS: ListaPresenca = {
   id: 'lst-dds-2026-w31',
   tipo: 'DDS',
-  setorId: 'st-esmaltacao',
-  turno: 'T1',
+  setorId: 'st-fundicao-garol',
+  turno: 'Manhã',
   referencia: 'Semana 31 — 27/07 a 02/08',
   periodoInicio: '2026-07-27',
   periodoFim: '2026-08-02',
   supervisor: 'Carlos Andrade',
 }
 
-// Gera alguns registros ficticios variados para dar vida as grades.
+// Gera registros ficticios apenas para AUSENCIAS; dias trabalhados ficam em
+// branco (o estado normal, assinado fisicamente na lista impressa).
 function gerarRegistrosGinastica(): RegistroPresenca[] {
   const registros: RegistroPresenca[] = []
   const diasNoMes = 31
@@ -101,8 +112,8 @@ function gerarRegistrosGinastica(): RegistroPresenca[] {
       else if (c.status === 'desligado' && dia > 10) status = StatusPresenca.Desligado
       else if (ci === 4 && dia >= 14 && dia <= 20) status = StatusPresenca.Ferias
       else if (ci === 7 && (dia === 9 || dia === 10)) status = StatusPresenca.Atestado
-      else if (dataDia <= new Date(2026, 6, 30)) status = StatusPresenca.Presente
-      registros.push({ colaboradorId: c.id, listaId: LISTA_GINASTICA.id, dia, status })
+      // demais dias: em branco (presenca por assinatura)
+      if (status !== '') registros.push({ colaboradorId: c.id, listaId: LISTA_GINASTICA.id, dia, status })
     }
   })
   return registros
@@ -117,8 +128,8 @@ function gerarRegistrosDDS(): RegistroPresenca[] {
       if (d === 0 || d === 6) status = StatusPresenca.Folga
       else if (c.status === 'desligado') status = StatusPresenca.Desligado
       else if (ci === 2 && d === 3) status = StatusPresenca.Falta
-      else status = StatusPresenca.Presente
-      registros.push({ colaboradorId: c.id, listaId: LISTA_DDS.id, dia: d, status })
+      // demais dias: em branco (presenca por assinatura)
+      if (status !== '') registros.push({ colaboradorId: c.id, listaId: LISTA_DDS.id, dia: d, status })
     }
   })
   return registros

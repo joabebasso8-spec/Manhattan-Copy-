@@ -163,6 +163,7 @@ button {
   font-weight: 700;
   font-size: 12px;
 }
+.legenda__sigla--vazio { background: var(--branco); border: 1px solid var(--cinza-300); }
 
 /* =====================================================================
    Telas de lista (GL / DDS) — layout comum
@@ -291,6 +292,33 @@ button {
   border-top: none;
   padding: 10px 16px;
 }
+/* Barra de filtro (selecao de turno para impressao) */
+.filtro-bar {
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+  flex-wrap: wrap;
+  background: var(--azul-050);
+  border: 1px solid var(--borda);
+  border-top: none;
+  padding: 12px 16px;
+}
+.filtro-bar__campo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--cinza-700);
+}
+.filtro-bar__campo select {
+  padding: 8px 10px;
+  border: 1px solid var(--borda);
+  border-radius: 6px;
+  font-size: 13px;
+  min-width: 200px;
+}
+
 .toggle { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: var(--cinza-700); }
 .toggle input { width: 16px; height: 16px; }
 
@@ -531,7 +559,7 @@ thead .pg-col-colab { z-index: 4; background: var(--azul-100); }
 
 /* --------------------------- Impressao ------------------------------ */
 @media print {
-  .action-bar, .lista-page__controles, .menu-page__papel { display: none; }
+  .action-bar, .lista-page__controles, .menu-page__papel, .filtro-bar { display: none; }
   body { background: #fff; }
   .grid-wrap { overflow: visible; border: none; }
 }

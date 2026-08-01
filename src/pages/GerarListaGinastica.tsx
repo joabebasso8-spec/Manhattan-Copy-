@@ -4,11 +4,12 @@ import { ColaboradorDialog } from '../components/ColaboradorDialog'
 import { DocumentHeader } from '../components/DocumentHeader'
 import { LegendaPanel } from '../components/LegendaPanel'
 import { PresenceGrid, type ColunaDia } from '../components/PresenceGrid'
-import { folgasDaEscala, type Colaborador, type StatusPresenca } from '../data/domain'
+import { folgasDaEscala, TURNOS, type Colaborador, type StatusPresenca } from '../data/domain'
 import { useStore } from '../data/store'
 
 const DIAS_SEMANA_ABREV = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
 const POR_PAGINA = 10
+const TODOS = 'Todos os turnos'
 
 export function GerarListaGinastica() {
   const store = useStore()
@@ -17,6 +18,8 @@ export function GerarListaGinastica() {
   const [pagina, setPagina] = useState(0)
   const [textSize, setTextSize] = useState<'sm' | 'md' | 'lg'>('md')
   const [autoFolgas, setAutoFolgas] = useState(false)
+  const [turnoFiltro, setTurnoFiltro] = useState<string>(TODOS)
+  const [mostrarFiltro, setMostrarFiltro] = useState(false)
   const [dialog, setDialog] = useState<{ aberto: boolean; alvo: Colaborador | null }>({
     aberto: false,
     alvo: null,
@@ -43,9 +46,15 @@ export function GerarListaGinastica() {
   }, [lista.periodoInicio, lista.periodoFim])
 
   const colaboradores = store.colaboradores
-  const totalPaginas = Math.max(1, Math.ceil(colaboradores.length / POR_PAGINA))
+  const colaboradoresFiltrados = colaboradores.filter(
+    (c) => turnoFiltro === TODOS || c.turno === turnoFiltro,
+  )
+  const totalPaginas = Math.max(1, Math.ceil(colaboradoresFiltrados.length / POR_PAGINA))
   const paginaAtual = Math.min(pagina, totalPaginas - 1)
-  const fatia = colaboradores.slice(paginaAtual * POR_PAGINA, paginaAtual * POR_PAGINA + POR_PAGINA)
+  const fatia = colaboradoresFiltrados.slice(
+    paginaAtual * POR_PAGINA,
+    paginaAtual * POR_PAGINA + POR_PAGINA,
+  )
 
   const getStatus = (cid: string, dia: number): StatusPresenca | '' =>
     store.registros.find(
@@ -87,15 +96,41 @@ export function GerarListaGinastica() {
           onAlternarTexto={() =>
             setTextSize((t) => (t === 'sm' ? 'md' : t === 'md' ? 'lg' : 'sm'))
           }
+          onFiltrar={() => setMostrarFiltro((v) => !v)}
         />
       </div>
+
+      {mostrarFiltro && (
+        <div className="filtro-bar">
+          <label className="filtro-bar__campo">
+            Turno para impressão
+            <select
+              value={turnoFiltro}
+              onChange={(e) => {
+                setTurnoFiltro(e.target.value)
+                setPagina(0)
+              }}
+            >
+              <option value={TODOS}>{TODOS}</option>
+              {TURNOS.map((t) => (
+                <option key={t} value={t}>
+                  {t}
+                </option>
+              ))}
+            </select>
+          </label>
+          <button className="btn btn--secondary" onClick={() => window.print()}>
+            🖨 Imprimir {turnoFiltro === TODOS ? 'todos' : turnoFiltro}
+          </button>
+        </div>
+      )}
 
       <div className="lista-page__paineis">
         <section className="ctx-panel">
           <h2 className="ctx-panel__titulo">Contexto</h2>
           <dl className="ctx-panel__dl">
             <div><dt>Setor</dt><dd>{setorNome}</dd></div>
-            <div><dt>Turno</dt><dd>{lista.turno}</dd></div>
+            <div><dt>Turno</dt><dd>{turnoFiltro}</dd></div>
             <div><dt>Mês</dt><dd>{lista.referencia}</dd></div>
             <div>
               <dt>Período</dt>

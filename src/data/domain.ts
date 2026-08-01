@@ -51,11 +51,13 @@ export const SIGLAS_AUSENCIA: StatusPresenca[] = [
   StatusPresenca.Desligado,
 ]
 
-/** Todas as opcoes selecionaveis em uma celula da grade (inclui vazio). */
-export const OPCOES_CELULA: StatusPresenca[] = [
-  StatusPresenca.Presente,
-  ...SIGLAS_AUSENCIA,
-]
+/**
+ * Opcoes selecionaveis em uma celula da grade: apenas as siglas de AUSENCIA.
+ * A presenca nao e marcada digitalmente (o normal e o espaco em branco, que
+ * sera assinado fisicamente na lista impressa), por isso "X" nao aparece como
+ * opcao.
+ */
+export const OPCOES_CELULA: StatusPresenca[] = [...SIGLAS_AUSENCIA]
 
 // ---------------------------------------------------------------------
 // Modelo de dados
