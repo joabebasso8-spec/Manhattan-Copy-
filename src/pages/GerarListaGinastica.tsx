@@ -287,6 +287,7 @@ export function GerarListaGinastica() {
         colaboradores={colaboradoresFiltrados}
         linhaHorario={(c) => `${c.horario}${c.escala ? ' - ' + c.escala : ''}`}
         valorCelula={(c, key) => getStatus(c.id, Number(key))}
+        assinatura
       />
     </div>
   )

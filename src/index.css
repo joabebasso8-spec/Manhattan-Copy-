@@ -650,4 +650,8 @@ thead .pg-col-colab { z-index: 4; background: var(--azul-100); }
     font-weight: 700;
     font-size: 11px;
   }
+
+  /* Coluna extra de ASSINATURA (só na Ginástica): célula em branco, mais
+     larga que as demais, no fim de cada linha (lado direito da folha). */
+  .ps-assinatura { width: 78px; }
 }

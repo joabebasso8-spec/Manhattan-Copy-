@@ -36,6 +36,8 @@ interface Props {
   linhaHorario: (c: Colaborador) => string
   /** Valor a exibir em cada célula (ex.: "X", "FO"); vazio = em branco. */
   valorCelula?: (c: Colaborador, colKey: string | number) => string
+  /** Linhas mais altas, com espaço em branco para assinatura (usado na Ginástica). */
+  assinatura?: boolean
 }
 
 export function PrintSheet(props: Props) {
@@ -82,6 +84,7 @@ function FolhaImpressao({
   colaboradores,
   linhaHorario,
   valorCelula,
+  assinatura,
   ultima,
 }: Props & { ultima: boolean }) {
   return (
@@ -140,6 +143,8 @@ function FolhaImpressao({
                 {col.label}
               </th>
             ))}
+            {/* Coluna extra (mais larga) de assinatura — só na Ginástica. */}
+            {assinatura && <th className="ps-assinatura" />}
           </tr>
         </thead>
         <tbody>
@@ -156,6 +161,7 @@ function FolhaImpressao({
                   {valorCelula ? valorCelula(c, col.key) : ''}
                 </td>
               ))}
+              {assinatura && <td className="ps-assinatura ps-celula" />}
             </tr>
           ))}
         </tbody>
