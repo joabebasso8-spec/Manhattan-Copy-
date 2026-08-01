@@ -2,6 +2,7 @@
 // Folha de impressao — replica o layout oficial das listas de presenca
 // (formularios GL: Ginastica Laboral e DDS: Dialogo Diario de Seguranca).
 // Visivel apenas na impressao (@media print); oculta na tela.
+// Cada folha impressa contém no máximo 10 colaboradores.
 // =====================================================================
 
 import type { ReactNode } from 'react'
@@ -11,6 +12,8 @@ export interface ColunaImpressao {
   key: string | number
   label: string
 }
+
+const POR_FOLHA = 10
 
 interface Props {
   codigo: string // LPGL | LPDDS
@@ -35,7 +38,31 @@ interface Props {
   valorCelula?: (c: Colaborador, colKey: string | number) => string
 }
 
-export function PrintSheet({
+export function PrintSheet(props: Props) {
+  const { colaboradores } = props
+
+  // Divide os colaboradores em folhas de no máximo 10.
+  const folhas: Colaborador[][] = []
+  for (let i = 0; i < colaboradores.length; i += POR_FOLHA) {
+    folhas.push(colaboradores.slice(i, i + POR_FOLHA))
+  }
+  if (folhas.length === 0) folhas.push([])
+
+  return (
+    <div className="print-sheet">
+      {folhas.map((grupo, idx) => (
+        <FolhaImpressao
+          key={idx}
+          {...props}
+          colaboradores={grupo}
+          ultima={idx === folhas.length - 1}
+        />
+      ))}
+    </div>
+  )
+}
+
+function FolhaImpressao({
   codigo,
   subtitulo,
   emissao,
@@ -55,9 +82,10 @@ export function PrintSheet({
   colaboradores,
   linhaHorario,
   valorCelula,
-}: Props) {
+  ultima,
+}: Props & { ultima: boolean }) {
   return (
-    <div className="print-sheet">
+    <section className={`ps-folha${ultima ? '' : ' ps-folha--quebra'}`}>
       {/* Barra fina superior */}
       <div className="ps-top">
         <span>
@@ -132,6 +160,6 @@ export function PrintSheet({
           ))}
         </tbody>
       </table>
-    </div>
+    </section>
   )
 }

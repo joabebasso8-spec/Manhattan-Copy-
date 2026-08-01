@@ -15,7 +15,7 @@ import {
 } from './domain'
 
 export const USUARIO_LOGADO: Usuario = {
-  nome: 'Carlos Andrade',
+  nome: 'Joabe Souza',
   papel: 'supervisor',
   empresa: 'Roca Sanitários Brasil',
   unidade: 'Serra / ES',
@@ -85,7 +85,7 @@ export const LISTA_GINASTICA: ListaPresenca = {
   referencia: 'Julho / 2026',
   periodoInicio: '2026-07-01',
   periodoFim: '2026-07-31',
-  supervisor: 'Carlos Andrade',
+  supervisor: 'George Victor',
 }
 
 export const LISTA_DDS: ListaPresenca = {
@@ -96,7 +96,7 @@ export const LISTA_DDS: ListaPresenca = {
   referencia: 'Semana 31 — 27/07 a 02/08',
   periodoInicio: '2026-07-27',
   periodoFim: '2026-08-02',
-  supervisor: 'Carlos Andrade',
+  supervisor: 'George Victor',
 }
 
 // Lançamentos manuais de exemplo, ancorados na DATA real (chave AAAAMMDD).

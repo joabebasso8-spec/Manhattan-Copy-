@@ -30,7 +30,7 @@ body {
   margin: 0;
   background: var(--cinza-100);
   color: var(--cinza-900);
-  font-size: 14px;
+  font-size: 16px;
   line-height: 1.45;
 }
 
@@ -343,9 +343,9 @@ button {
   border: 1px solid var(--borda);
   border-top: none;
 }
-.presence-grid { border-collapse: collapse; width: 100%; font-size: 13px; }
-.presence-grid--sm { font-size: 11.5px; }
-.presence-grid--lg { font-size: 15px; }
+.presence-grid { border-collapse: collapse; width: 100%; font-size: 15px; }
+.presence-grid--sm { font-size: 13px; }
+.presence-grid--lg { font-size: 17px; }
 
 .presence-grid th, .presence-grid td {
   border: 1px solid var(--cinza-200);
@@ -410,26 +410,31 @@ thead .pg-col-colab { z-index: 4; background: var(--azul-100); }
 }
 .pg-colab__acoes button:hover { background: var(--cinza-200); color: var(--azul-700); }
 
-.pg-cell { padding: 0; height: 34px; }
+.pg-cell { padding: 0; height: 38px; text-align: center; vertical-align: middle; }
 .pg-cell--destaque { background: #f0f5f9; }
 .pg-cell__text {
   width: 100%;
   height: 100%;
-  min-height: 32px;
+  min-height: 36px;
   border: none;
   background: transparent;
   font-weight: 700;
   font-size: inherit;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .pg-cell__text:hover { background: var(--azul-050); }
 .pg-cell__select {
   width: 100%;
   height: 100%;
-  min-height: 32px;
+  min-height: 36px;
   border: none;
   background: transparent;
   font-weight: 700;
   font-size: inherit;
+  text-transform: uppercase;
   text-align: center;
   text-align-last: center;
   appearance: none;
@@ -574,23 +579,24 @@ thead .pg-col-colab { z-index: 4; background: var(--azul-100); }
     display: block;
     width: 100%;
     color: #000;
-    font-size: 9px;
+    font-size: 11px;
     font-family: 'Segoe UI', Arial, sans-serif;
   }
-  /* Evita quebrar uma linha de colaborador no meio, entre páginas. */
+  /* Cada folha (grupo de até 10 colaboradores) começa em página nova. */
+  .ps-folha--quebra { page-break-after: always; }
   .ps-tabela tr, .ps-tabela td, .ps-tabela th { page-break-inside: avoid; }
   .ps-tabela thead { display: table-header-group; }
 
   .ps-top {
     display: flex;
     justify-content: space-between;
-    font-size: 8.5px;
+    font-size: 10px;
     padding: 0 2px 4px;
   }
   .ps-titulo {
     border: 1px solid #000;
-    padding: 7px 10px;
-    font-size: 15px;
+    padding: 8px 12px;
+    font-size: 18px;
     font-weight: 400;
   }
   .ps-titulo strong { font-weight: 700; }
@@ -601,22 +607,22 @@ thead .pg-col-colab { z-index: 4; background: var(--azul-100); }
     border: 1px solid #000;
     border-top: none;
   }
-  .ps-info__col { padding: 6px 8px; }
+  .ps-info__col { padding: 7px 9px; }
   .ps-info__meio, .ps-info__valid { border-left: 1px solid #000; }
-  .ps-info__dados > div { margin-bottom: 4px; }
-  .ps-lbl { color: #000; font-weight: 400; display: inline-block; min-width: 66px; text-align: right; margin-right: 4px; }
+  .ps-info__dados > div { margin-bottom: 5px; }
+  .ps-lbl { color: #000; font-weight: 400; display: inline-block; min-width: 74px; text-align: right; margin-right: 4px; }
   .ps-info__dados .ps-lbl { font-weight: 400; }
-  .ps-pausas { margin-top: 6px; text-align: center; }
-  .ps-pausas__t { font-weight: 700; font-size: 8.5px; }
+  .ps-pausas { margin-top: 7px; text-align: center; }
+  .ps-pausas__t { font-weight: 700; font-size: 10px; }
   .ps-pausas__v { margin-top: 2px; }
 
-  .ps-info__meio h3, .ps-info__valid h3 { margin: 0 0 5px; font-size: 10px; font-weight: 700; }
-  .ps-meio-desc { font-size: 8px; line-height: 1.3; text-align: justify; }
-  .ps-temas { width: 100%; border-collapse: collapse; font-size: 8.5px; }
-  .ps-temas td { padding: 1px 4px; vertical-align: top; }
+  .ps-info__meio h3, .ps-info__valid h3 { margin: 0 0 6px; font-size: 12px; font-weight: 700; }
+  .ps-meio-desc { font-size: 9.5px; line-height: 1.35; text-align: justify; }
+  .ps-temas { width: 100%; border-collapse: collapse; font-size: 10px; }
+  .ps-temas td { padding: 2px 4px; vertical-align: top; }
   .ps-temas__data { white-space: nowrap; }
   .ps-temas__tema { font-weight: 700; }
-  .ps-valid__linha { margin-bottom: 9px; font-size: 9px; }
+  .ps-valid__linha { margin-bottom: 11px; font-size: 11px; }
 
   .ps-tabela { width: 100%; border-collapse: collapse; margin-top: 6px; table-layout: fixed; }
   .ps-tabela th, .ps-tabela td { border: 1px solid #000; }
@@ -624,15 +630,24 @@ thead .pg-col-colab { z-index: 4; background: var(--azul-100); }
     background: #f0f0f0 !important;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
-    font-size: 9px;
-    padding: 4px 2px;
+    font-size: 11px;
+    padding: 5px 2px;
     text-align: center;
+    vertical-align: middle;
   }
-  .ps-colab { width: 250px; text-align: left; padding: 3px 6px; }
+  .ps-colab { width: 250px; text-align: left; padding: 4px 7px; }
   th.ps-colab { text-align: left; }
-  .ps-colab__nome { font-size: 9.5px; }
-  .ps-colab__nome strong { font-size: 10px; }
-  .ps-colab__hor { font-size: 7.5px; color: #333; margin-top: 1px; }
-  .ps-dia { font-size: 8.5px; }
-  .ps-celula { height: 26px; }
+  .ps-colab__nome { font-size: 11.5px; }
+  .ps-colab__nome strong { font-size: 12px; }
+  .ps-colab__hor { font-size: 9px; color: #333; margin-top: 1px; }
+  .ps-dia { font-size: 10.5px; }
+  /* Qualquer conteúdo na célula fica centralizado (H+V), em maiúsculo e negrito. */
+  .ps-celula {
+    height: 30px;
+    text-align: center;
+    vertical-align: middle;
+    text-transform: uppercase;
+    font-weight: 700;
+    font-size: 11px;
+  }
 }
