@@ -31,6 +31,8 @@ interface Props {
   colunas: ColunaImpressao[]
   colaboradores: Colaborador[]
   linhaHorario: (c: Colaborador) => string
+  /** Valor a exibir em cada célula (ex.: "X", "FO"); vazio = em branco. */
+  valorCelula?: (c: Colaborador, colKey: string | number) => string
 }
 
 export function PrintSheet({
@@ -52,6 +54,7 @@ export function PrintSheet({
   colunas,
   colaboradores,
   linhaHorario,
+  valorCelula,
 }: Props) {
   return (
     <div className="print-sheet">
@@ -121,7 +124,9 @@ export function PrintSheet({
                 <div className="ps-colab__hor">{linhaHorario(c)}</div>
               </td>
               {colunas.map((col) => (
-                <td key={col.key} className="ps-celula" />
+                <td key={col.key} className="ps-celula">
+                  {valorCelula ? valorCelula(c, col.key) : ''}
+                </td>
               ))}
             </tr>
           ))}

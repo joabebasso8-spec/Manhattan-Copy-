@@ -5,7 +5,7 @@ import { DocumentHeader } from '../components/DocumentHeader'
 import { LegendaPanel } from '../components/LegendaPanel'
 import { PresenceGrid, type ColunaDia } from '../components/PresenceGrid'
 import { PrintSheet, type ColunaImpressao } from '../components/PrintSheet'
-import { folgasDaEscala, TURNOS, turnoOrdinal, type Colaborador, type StatusPresenca } from '../data/domain'
+import { ehFolgaDaEscala, StatusPresenca, TURNOS, turnoOrdinal, type Colaborador } from '../data/domain'
 import { HOJE } from '../data/seed'
 import { useStore } from '../data/store'
 
@@ -19,7 +19,6 @@ export function GerarListaGinastica() {
 
   const [pagina, setPagina] = useState(0)
   const [textSize, setTextSize] = useState<'sm' | 'md' | 'lg'>('md')
-  const [autoFolgas, setAutoFolgas] = useState(false)
   const [turnoFiltro, setTurnoFiltro] = useState<string>(TODOS)
   const [mostrarFiltro, setMostrarFiltro] = useState(false)
   const [dialog, setDialog] = useState<{ aberto: boolean; alvo: Colaborador | null }>({
@@ -28,36 +27,26 @@ export function GerarListaGinastica() {
   })
 
   const setorNome = setores.find((s) => s.id === lista.setorId)?.nome ?? '—'
+  const inicioMes = new Date(lista.periodoInicio + 'T00:00:00')
+  const dataDoDia = (dia: number) =>
+    new Date(inicioMes.getFullYear(), inicioMes.getMonth(), dia)
 
-  // Colunas: dias do mes de julho/2026 (31 dias), destacando domingos.
+  // Colunas: apenas dias úteis do mês (sábados e domingos são excluídos).
   const colunas: ColunaDia[] = useMemo(() => {
-    const inicio = new Date(lista.periodoInicio + 'T00:00:00')
     const fim = new Date(lista.periodoFim + 'T00:00:00')
     const cols: ColunaDia[] = []
-    for (let dia = inicio.getDate(); dia <= fim.getDate(); dia++) {
-      const data = new Date(inicio.getFullYear(), inicio.getMonth(), dia)
-      const dow = data.getDay()
-      cols.push({
-        dia,
-        label: String(dia),
-        sub: DIAS_SEMANA_ABREV[dow],
-      })
+    for (let dia = inicioMes.getDate(); dia <= fim.getDate(); dia++) {
+      const dow = new Date(inicioMes.getFullYear(), inicioMes.getMonth(), dia).getDay()
+      if (dow === 0 || dow === 6) continue
+      cols.push({ dia, label: String(dia), sub: DIAS_SEMANA_ABREV[dow] })
     }
     return cols
   }, [lista.periodoInicio, lista.periodoFim])
 
-  // Colunas da IMPRESSÃO: apenas dias úteis (seg–sex), como no formulário oficial.
-  const colunasImpressao: ColunaImpressao[] = useMemo(() => {
-    const inicio = new Date(lista.periodoInicio + 'T00:00:00')
-    const fim = new Date(lista.periodoFim + 'T00:00:00')
-    const cols: ColunaImpressao[] = []
-    for (let dia = inicio.getDate(); dia <= fim.getDate(); dia++) {
-      const dow = new Date(inicio.getFullYear(), inicio.getMonth(), dia).getDay()
-      if (dow === 0 || dow === 6) continue
-      cols.push({ key: dia, label: String(dia) })
-    }
-    return cols
-  }, [lista.periodoInicio, lista.periodoFim])
+  const colunasImpressao: ColunaImpressao[] = colunas.map((c) => ({
+    key: c.dia,
+    label: c.label,
+  }))
 
   const colaboradores = store.colaboradores
   const colaboradoresFiltrados = colaboradores.filter(
@@ -70,33 +59,17 @@ export function GerarListaGinastica() {
     paginaAtual * POR_PAGINA + POR_PAGINA,
   )
 
-  const getStatus = (cid: string, dia: number): StatusPresenca | '' =>
-    store.registros.find(
+  // Status de uma célula: registro manual > folga da escala > "X" nas sextas > branco.
+  const getStatus = (cid: string, dia: number): StatusPresenca | '' => {
+    const reg = store.registros.find(
       (r) => r.listaId === lista.id && r.colaboradorId === cid && r.dia === dia,
-    )?.status ?? ''
-
-  function aplicarAutoFolgas(ativar: boolean) {
-    setAutoFolgas(ativar)
-    if (ativar) {
-      const domingos = diasDoMesPorWeekday([0]) // domingos do mês
-      store.autoPreencherFolgas(
-        lista.id,
-        domingos,
-        colaboradores.map((c) => c.id),
-      )
-    }
-  }
-
-  // Converte dias da semana (0=Dom..6=Sáb) nos números de dia do mês correspondentes.
-  function diasDoMesPorWeekday(weekdays: number[]): number[] {
-    const inicio = new Date(lista.periodoInicio + 'T00:00:00')
-    const fim = new Date(lista.periodoFim + 'T00:00:00')
-    const dias: number[] = []
-    for (let d = inicio.getDate(); d <= fim.getDate(); d++) {
-      const data = new Date(inicio.getFullYear(), inicio.getMonth(), d)
-      if (weekdays.includes(data.getDay())) dias.push(d)
-    }
-    return dias
+    )
+    if (reg) return reg.status
+    const c = store.colaboradores.find((x) => x.id === cid)
+    const data = dataDoDia(dia)
+    if (c?.escala && ehFolgaDaEscala(c.escala, data)) return StatusPresenca.Folga
+    if (data.getDay() === 5) return StatusPresenca.Presente // X nas sextas-feiras
+    return ''
   }
 
   return (
@@ -170,15 +143,6 @@ export function GerarListaGinastica() {
       </div>
 
       <div className="lista-page__controles">
-        <label className="toggle">
-          <input
-            type="checkbox"
-            checked={autoFolgas}
-            onChange={(e) => aplicarAutoFolgas(e.target.checked)}
-          />
-          <span>Preenchimento automático de folgas</span>
-        </label>
-
         <div className="paginacao">
           <button
             className="paginacao__btn"
@@ -223,7 +187,7 @@ export function GerarListaGinastica() {
         colunas={colunas}
         getStatus={getStatus}
         onChangeStatus={(cid, dia, status) => store.setStatus(lista.id, cid, dia, status)}
-        cellMode="text"
+        cellMode="dropdown"
         textSize={textSize}
         onAdd={() => setDialog({ aberto: true, alvo: null })}
         onEdit={(c) => setDialog({ aberto: true, alvo: c })}
@@ -238,18 +202,8 @@ export function GerarListaGinastica() {
         <ColaboradorDialog
           colaborador={dialog.alvo}
           onSalvar={(c) => {
-            let id: string
-            if ('id' in c) {
-              store.updateColaborador(c)
-              id = c.id
-            } else {
-              id = store.addColaborador(c)
-            }
-            // Expande as folgas da escala (dias da semana) para os dias do mês.
-            if (c.escala) {
-              const weekdays = folgasDaEscala(c.escala, new Date().getDay())
-              store.aplicarFolgas(lista.id, id, diasDoMesPorWeekday(weekdays))
-            }
+            if ('id' in c) store.updateColaborador(c)
+            else store.addColaborador(c)
             setDialog({ aberto: false, alvo: null })
           }}
           onCancelar={() => setDialog({ aberto: false, alvo: null })}
@@ -287,6 +241,7 @@ export function GerarListaGinastica() {
         colunas={colunasImpressao}
         colaboradores={colaboradoresFiltrados}
         linhaHorario={(c) => `${c.horario}${c.escala ? ' - ' + c.escala : ''}`}
+        valorCelula={(c, key) => getStatus(c.id, Number(key))}
       />
     </div>
   )

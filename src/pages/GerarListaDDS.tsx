@@ -5,7 +5,7 @@ import { DocumentHeader } from '../components/DocumentHeader'
 import { LegendaPanel } from '../components/LegendaPanel'
 import { PresenceGrid, type ColunaDia } from '../components/PresenceGrid'
 import { PrintSheet, type ColunaImpressao } from '../components/PrintSheet'
-import { folgasDaEscala, TURNOS, turnoOrdinal, type Colaborador, type StatusPresenca } from '../data/domain'
+import { ehFolgaDaEscala, StatusPresenca, TURNOS, turnoOrdinal, type Colaborador } from '../data/domain'
 import { HOJE } from '../data/seed'
 import { useStore } from '../data/store'
 
@@ -74,10 +74,17 @@ export function GerarListaDDS() {
   const paginaAtual = Math.min(pagina, totalPaginas - 1)
   const fatia = colaboradores.slice(paginaAtual * POR_PAGINA, paginaAtual * POR_PAGINA + POR_PAGINA)
 
-  const getStatus = (cid: string, dia: number): StatusPresenca | '' =>
-    store.registros.find(
+  // Status de uma célula: registro manual > folga da escala (por data) > branco.
+  // dia = índice do dia da semana (0=Dom..6=Sáb).
+  const getStatus = (cid: string, dia: number): StatusPresenca | '' => {
+    const reg = store.registros.find(
       (r) => r.listaId === lista.id && r.colaboradorId === cid && r.dia === dia,
-    )?.status ?? ''
+    )
+    if (reg) return reg.status
+    const c = store.colaboradores.find((x) => x.id === cid)
+    if (c?.escala && ehFolgaDaEscala(c.escala, diasDaSemana[dia])) return StatusPresenca.Folga
+    return ''
+  }
 
   return (
     <div className="lista-page">
@@ -214,17 +221,8 @@ export function GerarListaDDS() {
         <ColaboradorDialog
           colaborador={dialog.alvo}
           onSalvar={(c) => {
-            let id: string
-            if ('id' in c) {
-              store.updateColaborador(c)
-              id = c.id
-            } else {
-              id = store.addColaborador(c)
-            }
-            // Preenche as folgas da semana conforme a escala (dias = índice do dia da semana).
-            if (c.escala) {
-              store.aplicarFolgas(lista.id, id, folgasDaEscala(c.escala, new Date().getDay()))
-            }
+            if ('id' in c) store.updateColaborador(c)
+            else store.addColaborador(c)
             setDialog({ aberto: false, alvo: null })
           }}
           onCancelar={() => setDialog({ aberto: false, alvo: null })}
@@ -266,6 +264,7 @@ export function GerarListaDDS() {
         colunas={colunasImpressao}
         colaboradores={colaboradores}
         linhaHorario={(c) => `${c.horario}${c.escala ? ' - ' + c.escala : ''}`}
+        valorCelula={(c, key) => getStatus(c.id, Number(key))}
       />
     </div>
   )

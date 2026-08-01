@@ -29,7 +29,7 @@ import {
   LISTA_DDS,
 } from './seed'
 
-const STORAGE_KEY = 'manhattan-dds-gl:v2'
+const STORAGE_KEY = 'manhattan-dds-gl:v3'
 
 interface EstadoPersistido {
   colaboradores: Colaborador[]
@@ -52,11 +52,9 @@ interface StoreContextValue {
   addColaborador: (c: Omit<Colaborador, 'id'>) => string
   updateColaborador: (c: Colaborador) => void
   removeColaborador: (id: string) => void
-  aplicarFolgas: (listaId: string, colaboradorId: string, dias: number[]) => void
   addTema: (t: Omit<TemaDDS, 'id'>) => void
   updateTema: (t: TemaDDS) => void
   removeTema: (id: string) => void
-  autoPreencherFolgas: (listaId: string, dias: number[], colaboradorIds: string[]) => void
   resetar: () => void
 }
 
@@ -133,46 +131,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       setRegistros((prev) => prev.filter((r) => r.colaboradorId !== id))
     },
 
-    // Marca "FO" (folga) nos dias informados para um colaborador em uma lista.
-    aplicarFolgas: (listaId, colaboradorId, dias) => {
-      setRegistros((prev) => {
-        const copia = prev.slice()
-        for (const dia of dias) {
-          const idx = copia.findIndex(
-            (r) => r.listaId === listaId && r.colaboradorId === colaboradorId && r.dia === dia,
-          )
-          if (idx === -1) {
-            copia.push({ listaId, colaboradorId, dia, status: 'FO' as StatusPresenca })
-          } else {
-            copia[idx] = { ...copia[idx], status: 'FO' as StatusPresenca }
-          }
-        }
-        return copia
-      })
-    },
-
     addTema: (t) => setTemas((prev) => [...prev, { ...t, id: novoId('t') }]),
     updateTema: (t) => setTemas((prev) => prev.map((x) => (x.id === t.id ? t : x))),
     removeTema: (id) => setTemas((prev) => prev.filter((x) => x.id !== id)),
-
-    autoPreencherFolgas: (listaId, dias, colaboradorIds) => {
-      setRegistros((prev) => {
-        const copia = prev.slice()
-        for (const colaboradorId of colaboradorIds) {
-          for (const dia of dias) {
-            const idx = copia.findIndex(
-              (r) => r.listaId === listaId && r.colaboradorId === colaboradorId && r.dia === dia,
-            )
-            if (idx === -1) {
-              copia.push({ listaId, colaboradorId, dia, status: 'FO' as StatusPresenca })
-            } else if (copia[idx].status === '') {
-              copia[idx] = { ...copia[idx], status: 'FO' as StatusPresenca }
-            }
-          }
-        }
-        return copia
-      })
-    },
 
     resetar: () => {
       localStorage.removeItem(STORAGE_KEY)

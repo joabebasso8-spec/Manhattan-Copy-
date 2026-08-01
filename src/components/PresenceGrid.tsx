@@ -120,6 +120,10 @@ export function PresenceGrid({
                       >
                         {/* Opcao em branco (estado normal — presenca por assinatura). */}
                         <option value="">{' '}</option>
+                        {/* Mostra valores derivados fora da lista padrão (ex.: "X" das sextas). */}
+                        {status && !OPCOES_CELULA.includes(status) && (
+                          <option value={status}>{status}</option>
+                        )}
                         {OPCOES_CELULA.map((op) => (
                           <option key={op} value={op}>
                             {op}

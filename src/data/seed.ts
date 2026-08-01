@@ -39,22 +39,22 @@ const SETOR = 'st-fundicao-garol'
 
 export const COLABORADORES: Colaborador[] = [
   // Turno da Manhã
-  { id: 'c01', matricula: '10234', nome: 'Ana Beatriz Ferreira', setorId: SETOR, turno: 'Manhã', horario: MANHA, status: 'ativo' },
-  { id: 'c02', matricula: '10245', nome: 'Bruno Carvalho Lima', setorId: SETOR, turno: 'Manhã', horario: MANHA, status: 'ativo' },
-  { id: 'c03', matricula: '10251', nome: 'Camila Souza Rocha', setorId: SETOR, turno: 'Manhã', horario: MANHA, status: 'ativo' },
-  { id: 'c04', matricula: '10260', nome: 'Diego Nascimento Alves', setorId: SETOR, turno: 'Manhã', horario: MANHA, status: 'ativo' },
-  { id: 'c05', matricula: '10277', nome: 'Eduarda Martins Pinto', setorId: SETOR, turno: 'Manhã', horario: MANHA, status: 'ativo' },
+  { id: 'c01', matricula: '10234', nome: 'Ana Beatriz Ferreira', setorId: SETOR, turno: 'Manhã', horario: MANHA, status: 'ativo', escala: 'F' },
+  { id: 'c02', matricula: '10245', nome: 'Bruno Carvalho Lima', setorId: SETOR, turno: 'Manhã', horario: MANHA, status: 'ativo', escala: 'H' },
+  { id: 'c03', matricula: '10251', nome: 'Camila Souza Rocha', setorId: SETOR, turno: 'Manhã', horario: MANHA, status: 'ativo', escala: 'B' },
+  { id: 'c04', matricula: '10260', nome: 'Diego Nascimento Alves', setorId: SETOR, turno: 'Manhã', horario: MANHA, status: 'ativo', escala: 'D' },
+  { id: 'c05', matricula: '10277', nome: 'Eduarda Martins Pinto', setorId: SETOR, turno: 'Manhã', horario: MANHA, status: 'ativo', escala: 'F' },
   // Turno da Tarde
-  { id: 'c06', matricula: '10281', nome: 'Fábio Oliveira Ramos', setorId: SETOR, turno: 'Tarde', horario: TARDE, status: 'ativo' },
-  { id: 'c07', matricula: '10298', nome: 'Gabriela Dias Moreira', setorId: SETOR, turno: 'Tarde', horario: TARDE, status: 'ativo' },
-  { id: 'c08', matricula: '10305', nome: 'Henrique Barbosa Cruz', setorId: SETOR, turno: 'Tarde', horario: TARDE, status: 'ativo' },
-  { id: 'c09', matricula: '10312', nome: 'Isabela Cardoso Nunes', setorId: SETOR, turno: 'Tarde', horario: TARDE, status: 'ativo' },
-  { id: 'c10', matricula: '10327', nome: 'João Pedro Teixeira', setorId: SETOR, turno: 'Tarde', horario: TARDE, status: 'ativo' },
+  { id: 'c06', matricula: '10281', nome: 'Fábio Oliveira Ramos', setorId: SETOR, turno: 'Tarde', horario: TARDE, status: 'ativo', escala: 'H' },
+  { id: 'c07', matricula: '10298', nome: 'Gabriela Dias Moreira', setorId: SETOR, turno: 'Tarde', horario: TARDE, status: 'ativo', escala: 'B' },
+  { id: 'c08', matricula: '10305', nome: 'Henrique Barbosa Cruz', setorId: SETOR, turno: 'Tarde', horario: TARDE, status: 'ativo', escala: 'D' },
+  { id: 'c09', matricula: '10312', nome: 'Isabela Cardoso Nunes', setorId: SETOR, turno: 'Tarde', horario: TARDE, status: 'ativo', escala: 'F' },
+  { id: 'c10', matricula: '10327', nome: 'João Pedro Teixeira', setorId: SETOR, turno: 'Tarde', horario: TARDE, status: 'ativo', escala: 'H' },
   // Turno da Noite
-  { id: 'c11', matricula: '10334', nome: 'Karina Lopes Almeida', setorId: SETOR, turno: 'Noite', horario: NOITE, status: 'ativo' },
-  { id: 'c12', matricula: '10349', nome: 'Lucas Gomes Ribeiro', setorId: SETOR, turno: 'Noite', horario: NOITE, status: 'ativo' },
-  { id: 'c13', matricula: '10356', nome: 'Mariana Freitas Costa', setorId: SETOR, turno: 'Noite', horario: NOITE, status: 'ativo' },
-  { id: 'c14', matricula: '10361', nome: 'Nathan Vieira Santos', setorId: SETOR, turno: 'Noite', horario: NOITE, status: 'desligado' },
+  { id: 'c11', matricula: '10334', nome: 'Karina Lopes Almeida', setorId: SETOR, turno: 'Noite', horario: NOITE, status: 'ativo', escala: 'B' },
+  { id: 'c12', matricula: '10349', nome: 'Lucas Gomes Ribeiro', setorId: SETOR, turno: 'Noite', horario: NOITE, status: 'ativo', escala: 'D' },
+  { id: 'c13', matricula: '10356', nome: 'Mariana Freitas Costa', setorId: SETOR, turno: 'Noite', horario: NOITE, status: 'ativo', escala: 'F' },
+  { id: 'c14', matricula: '10361', nome: 'Nathan Vieira Santos', setorId: SETOR, turno: 'Noite', horario: NOITE, status: 'desligado', escala: 'H' },
 ]
 
 export const TEMAS_DDS: TemaDDS[] = [

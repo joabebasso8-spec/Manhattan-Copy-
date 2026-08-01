@@ -85,26 +85,39 @@ export function turnoOrdinal(turno: string): string {
 /** Opcoes fixas de horario no cadastro de colaborador. */
 export const HORARIOS: string[] = ['06:00 às 14:20', '14:20 às 22:40', '22:40 às 06:00']
 
-// Dias da semana como indices: 0=Dom, 1=Seg, 2=Ter, 3=Qua, 4=Qui, 5=Sex, 6=Sab.
-/**
- * Retorna os dias de folga (indices de dia da semana, 0=Dom..6=Sab) de uma
- * escala, tomando a semana atual como base. Regime 6x2 (folga 2 dias):
- *  - F: quarta e quinta
- *  - H: hoje e amanha (relativo ao dia atual)
- *  - B: domingo e segunda
- *  - D: terca e quarta
- */
-export function folgasDaEscala(escala: Escala, hojeWeekday: number): number[] {
-  switch (escala) {
-    case 'F':
-      return [3, 4]
-    case 'H':
-      return [hojeWeekday % 7, (hojeWeekday + 1) % 7]
-    case 'B':
-      return [0, 1]
-    case 'D':
-      return [2, 3]
-  }
+// ---------------------------------------------------------------------
+// Escalas 6x2 baseadas em DATA (funcionam para qualquer semana/mês).
+//
+// Cada escala folga 2 dias a cada ciclo de 8 dias (6 trabalhados + 2 de
+// folga). As datas-âncora abaixo definem o início de um bloco de 2 folgas;
+// a partir delas o padrão se repete a cada 8 dias, para frente e para trás.
+//   - B: folga 25 e 26/07/2026
+//   - D: folga 27 e 28/07/2026
+//   - F: folga 29 e 30/07/2026
+//   - H: folga 31/07 e 01/08/2026
+// ---------------------------------------------------------------------
+
+const ANCORA_ESCALA: Record<Escala, string> = {
+  B: '2026-07-25',
+  D: '2026-07-27',
+  F: '2026-07-29',
+  H: '2026-07-31',
+}
+
+const MS_DIA = 86400000
+
+/** Diferença em dias inteiros entre duas datas (ignora horas/fuso). */
+function diffEmDias(a: Date, b: Date): number {
+  const da = Date.UTC(a.getFullYear(), a.getMonth(), a.getDate())
+  const db = Date.UTC(b.getFullYear(), b.getMonth(), b.getDate())
+  return Math.round((da - db) / MS_DIA)
+}
+
+/** Indica se a data é dia de folga da escala (ciclo de 8 dias a partir da âncora). */
+export function ehFolgaDaEscala(escala: Escala, data: Date): boolean {
+  const ancora = new Date(ANCORA_ESCALA[escala] + 'T00:00:00')
+  const d = ((diffEmDias(data, ancora) % 8) + 8) % 8
+  return d === 0 || d === 1
 }
 
 export interface Colaborador {
