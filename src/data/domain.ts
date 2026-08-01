@@ -76,6 +76,12 @@ export const SETOR_PADRAO = { id: 'st-fundicao-garol', nome: 'Fundição Manual 
 /** Opcoes fixas de turno no cadastro de colaborador. */
 export const TURNOS: string[] = ['Manhã', 'Tarde', 'Noite']
 
+/** Rotulo ordinal do turno usado na impressao (1º/2º/3º Turno). */
+export function turnoOrdinal(turno: string): string {
+  const idx = TURNOS.indexOf(turno)
+  return idx >= 0 ? `${idx + 1}º Turno` : turno
+}
+
 /** Opcoes fixas de horario no cadastro de colaborador. */
 export const HORARIOS: string[] = ['06:00 às 14:20', '14:20 às 22:40', '22:40 às 06:00']
 

@@ -4,7 +4,9 @@ import { ColaboradorDialog } from '../components/ColaboradorDialog'
 import { DocumentHeader } from '../components/DocumentHeader'
 import { LegendaPanel } from '../components/LegendaPanel'
 import { PresenceGrid, type ColunaDia } from '../components/PresenceGrid'
-import { folgasDaEscala, TURNOS, type Colaborador, type StatusPresenca } from '../data/domain'
+import { PrintSheet, type ColunaImpressao } from '../components/PrintSheet'
+import { folgasDaEscala, TURNOS, turnoOrdinal, type Colaborador, type StatusPresenca } from '../data/domain'
+import { HOJE } from '../data/seed'
 import { useStore } from '../data/store'
 
 const DIAS_SEMANA_ABREV = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
@@ -13,7 +15,7 @@ const TODOS = 'Todos os turnos'
 
 export function GerarListaGinastica() {
   const store = useStore()
-  const { listaGinastica: lista, setores } = store
+  const { listaGinastica: lista, setores, usuario } = store
 
   const [pagina, setPagina] = useState(0)
   const [textSize, setTextSize] = useState<'sm' | 'md' | 'lg'>('md')
@@ -39,8 +41,20 @@ export function GerarListaGinastica() {
         dia,
         label: String(dia),
         sub: DIAS_SEMANA_ABREV[dow],
-        destaque: dow === 0,
       })
+    }
+    return cols
+  }, [lista.periodoInicio, lista.periodoFim])
+
+  // Colunas da IMPRESSÃO: apenas dias úteis (seg–sex), como no formulário oficial.
+  const colunasImpressao: ColunaImpressao[] = useMemo(() => {
+    const inicio = new Date(lista.periodoInicio + 'T00:00:00')
+    const fim = new Date(lista.periodoFim + 'T00:00:00')
+    const cols: ColunaImpressao[] = []
+    for (let dia = inicio.getDate(); dia <= fim.getDate(); dia++) {
+      const dow = new Date(inicio.getFullYear(), inicio.getMonth(), dia).getDay()
+      if (dow === 0 || dow === 6) continue
+      cols.push({ key: dia, label: String(dia) })
     }
     return cols
   }, [lista.periodoInicio, lista.periodoFim])
@@ -64,7 +78,7 @@ export function GerarListaGinastica() {
   function aplicarAutoFolgas(ativar: boolean) {
     setAutoFolgas(ativar)
     if (ativar) {
-      const domingos = colunas.filter((c) => c.destaque).map((c) => c.dia)
+      const domingos = diasDoMesPorWeekday([0]) // domingos do mês
       store.autoPreencherFolgas(
         lista.id,
         domingos,
@@ -241,6 +255,39 @@ export function GerarListaGinastica() {
           onCancelar={() => setDialog({ aberto: false, alvo: null })}
         />
       )}
+
+      <PrintSheet
+        codigo="LPGL"
+        subtitulo="GL: Ginástica Laboral"
+        emissao={new Date(HOJE + 'T00:00:00').toLocaleDateString('pt-BR')}
+        usuario={usuario.nome}
+        empresa={usuario.empresa}
+        unidade={usuario.unidade}
+        refCabecalho="7/2026"
+        setorNome={setorNome}
+        turnoLabel={turnoFiltro === TODOS ? 'Todos os turnos' : turnoOrdinal(turnoFiltro)}
+        mes="julho"
+        periodoRotulo="Período"
+        periodoValor={`de ${new Date(lista.periodoInicio + 'T00:00:00').toLocaleDateString('pt-BR')} a ${new Date(lista.periodoFim + 'T00:00:00').toLocaleDateString('pt-BR')}`}
+        supervisor={lista.supervisor}
+        meio={
+          <>
+            <h3>Ginástica Laboral</h3>
+            <p className="ps-meio-desc">
+              A ginástica laboral é uma prática que tem como principal objetivo prevenir
+              patologias relacionadas às atividades laborais e incentivar os colaboradores à
+              prática de atividades físicas, enfatizando a importância para a melhora na
+              qualidade de vida e manutenção da saúde. Apresenta baixa intensidade e melhora o
+              sistema cardíaco, respiratório e esquelético; reduz a fadiga; combate doenças
+              ocupacionais (LER/DORT, estresse, ansiedade); aumenta a atenção e a concentração;
+              e melhora a disposição.
+            </p>
+          </>
+        }
+        colunas={colunasImpressao}
+        colaboradores={colaboradoresFiltrados}
+        linhaHorario={(c) => `${c.horario}${c.escala ? ' - ' + c.escala : ''}`}
+      />
     </div>
   )
 }

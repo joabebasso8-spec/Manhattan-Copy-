@@ -29,7 +29,7 @@ import {
   LISTA_DDS,
 } from './seed'
 
-const STORAGE_KEY = 'manhattan-dds-gl:v1'
+const STORAGE_KEY = 'manhattan-dds-gl:v2'
 
 interface EstadoPersistido {
   colaboradores: Colaborador[]

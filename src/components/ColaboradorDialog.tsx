@@ -18,8 +18,14 @@ interface Props {
 export function ColaboradorDialog({ colaborador, onSalvar, onCancelar }: Props) {
   const [matricula, setMatricula] = useState(colaborador?.matricula ?? '')
   const [nome, setNome] = useState(colaborador?.nome ?? '')
-  const [turno, setTurno] = useState(colaborador?.turno ?? TURNOS[0])
-  const [horario, setHorario] = useState(colaborador?.horario ?? HORARIOS[0])
+  // Garante que o valor inicial exista nas opcoes (evita selecao "fantasma"
+  // com dados antigos que nao batem com as opcoes atuais).
+  const [turno, setTurno] = useState(
+    colaborador && TURNOS.includes(colaborador.turno) ? colaborador.turno : TURNOS[0],
+  )
+  const [horario, setHorario] = useState(
+    colaborador && HORARIOS.includes(colaborador.horario) ? colaborador.horario : HORARIOS[0],
+  )
   const [escala, setEscala] = useState<Escala | ''>(colaborador?.escala ?? '')
 
   function submeter(e: React.FormEvent) {

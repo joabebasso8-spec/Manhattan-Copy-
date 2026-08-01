@@ -557,9 +557,82 @@ thead .pg-col-colab { z-index: 4; background: var(--azul-100); }
   .menu-grid { grid-template-columns: 1fr; }
 }
 
-/* --------------------------- Impressao ------------------------------ */
+/* =====================================================================
+   Folha de impressao (layout oficial) — oculta na tela
+   ===================================================================== */
+.print-sheet { display: none; }
+
 @media print {
-  .action-bar, .lista-page__controles, .menu-page__papel, .filtro-bar { display: none; }
-  body { background: #fff; }
-  .grid-wrap { overflow: visible; border: none; }
+  @page { size: A4 landscape; margin: 8mm; }
+  html, body { background: #fff; }
+  /* Esconde a interface e mostra apenas a folha oficial (flui entre páginas). */
+  .lista-page > *:not(.print-sheet),
+  .menu-page,
+  .temas-page,
+  .placeholder-page { display: none !important; }
+  .print-sheet {
+    display: block;
+    width: 100%;
+    color: #000;
+    font-size: 9px;
+    font-family: 'Segoe UI', Arial, sans-serif;
+  }
+  /* Evita quebrar uma linha de colaborador no meio, entre páginas. */
+  .ps-tabela tr, .ps-tabela td, .ps-tabela th { page-break-inside: avoid; }
+  .ps-tabela thead { display: table-header-group; }
+
+  .ps-top {
+    display: flex;
+    justify-content: space-between;
+    font-size: 8.5px;
+    padding: 0 2px 4px;
+  }
+  .ps-titulo {
+    border: 1px solid #000;
+    padding: 7px 10px;
+    font-size: 15px;
+    font-weight: 400;
+  }
+  .ps-titulo strong { font-weight: 700; }
+
+  .ps-info {
+    display: grid;
+    grid-template-columns: 1.15fr 1.7fr 1.3fr;
+    border: 1px solid #000;
+    border-top: none;
+  }
+  .ps-info__col { padding: 6px 8px; }
+  .ps-info__meio, .ps-info__valid { border-left: 1px solid #000; }
+  .ps-info__dados > div { margin-bottom: 4px; }
+  .ps-lbl { color: #000; font-weight: 400; display: inline-block; min-width: 66px; text-align: right; margin-right: 4px; }
+  .ps-info__dados .ps-lbl { font-weight: 400; }
+  .ps-pausas { margin-top: 6px; text-align: center; }
+  .ps-pausas__t { font-weight: 700; font-size: 8.5px; }
+  .ps-pausas__v { margin-top: 2px; }
+
+  .ps-info__meio h3, .ps-info__valid h3 { margin: 0 0 5px; font-size: 10px; font-weight: 700; }
+  .ps-meio-desc { font-size: 8px; line-height: 1.3; text-align: justify; }
+  .ps-temas { width: 100%; border-collapse: collapse; font-size: 8.5px; }
+  .ps-temas td { padding: 1px 4px; vertical-align: top; }
+  .ps-temas__data { white-space: nowrap; }
+  .ps-temas__tema { font-weight: 700; }
+  .ps-valid__linha { margin-bottom: 9px; font-size: 9px; }
+
+  .ps-tabela { width: 100%; border-collapse: collapse; margin-top: 6px; table-layout: fixed; }
+  .ps-tabela th, .ps-tabela td { border: 1px solid #000; }
+  .ps-tabela thead th {
+    background: #f0f0f0 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    font-size: 9px;
+    padding: 4px 2px;
+    text-align: center;
+  }
+  .ps-colab { width: 250px; text-align: left; padding: 3px 6px; }
+  th.ps-colab { text-align: left; }
+  .ps-colab__nome { font-size: 9.5px; }
+  .ps-colab__nome strong { font-size: 10px; }
+  .ps-colab__hor { font-size: 7.5px; color: #333; margin-top: 1px; }
+  .ps-dia { font-size: 8.5px; }
+  .ps-celula { height: 26px; }
 }

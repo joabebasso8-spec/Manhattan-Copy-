@@ -4,7 +4,9 @@ import { ColaboradorDialog } from '../components/ColaboradorDialog'
 import { DocumentHeader } from '../components/DocumentHeader'
 import { LegendaPanel } from '../components/LegendaPanel'
 import { PresenceGrid, type ColunaDia } from '../components/PresenceGrid'
-import { folgasDaEscala, TURNOS, type Colaborador, type StatusPresenca } from '../data/domain'
+import { PrintSheet, type ColunaImpressao } from '../components/PrintSheet'
+import { folgasDaEscala, TURNOS, turnoOrdinal, type Colaborador, type StatusPresenca } from '../data/domain'
+import { HOJE } from '../data/seed'
 import { useStore } from '../data/store'
 
 const DIAS_SEMANA = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado']
@@ -14,7 +16,7 @@ const TODOS = 'Todos os turnos'
 
 export function GerarListaDDS() {
   const store = useStore()
-  const { listaDDS: lista, setores, temas } = store
+  const { listaDDS: lista, setores, temas, usuario } = store
 
   const [pagina, setPagina] = useState(0)
   const [textSize, setTextSize] = useState<'sm' | 'md' | 'lg'>('md')
@@ -44,7 +46,12 @@ export function GerarListaDDS() {
     dia: i,
     label: DIAS_SEMANA_ABREV[i],
     sub: diasDaSemana[i].toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
-    destaque: i === 0 || i === 6,
+  }))
+
+  // Colunas da IMPRESSÃO: os sete dias da semana com nome completo (como no PDF).
+  const colunasImpressao: ColunaImpressao[] = DIAS_SEMANA.map((nome, i) => ({
+    key: i,
+    label: nome,
   }))
 
   // Temas da semana casados com o dia correspondente (por data).
@@ -223,6 +230,43 @@ export function GerarListaDDS() {
           onCancelar={() => setDialog({ aberto: false, alvo: null })}
         />
       )}
+
+      <PrintSheet
+        codigo="LPDDS"
+        subtitulo="DDS: Diálogo Diário de Segurança"
+        emissao={new Date(HOJE + 'T00:00:00').toLocaleDateString('pt-BR')}
+        usuario={usuario.nome}
+        empresa={usuario.empresa}
+        unidade={usuario.unidade}
+        refCabecalho="7/2026"
+        setorNome={setorNome}
+        turnoLabel={turnoFiltro === TODOS ? 'Todos os turnos' : turnoOrdinal(turnoFiltro)}
+        mes="julho"
+        periodoRotulo="Semana"
+        periodoValor={lista.referencia.replace('Semana 31 — ', 'de ').replace(' a ', ' a ')}
+        supervisor={lista.supervisor}
+        pausas="09:20 às 09:35 · 12:00 às 13:00"
+        meio={
+          <>
+            <h3>Temas da Semana</h3>
+            <table className="ps-temas">
+              <tbody>
+                {temasDaSemana.map((t) => (
+                  <tr key={t.dia}>
+                    <td className="ps-temas__data">
+                      {t.data.toLocaleDateString('pt-BR')}
+                    </td>
+                    <td className="ps-temas__tema">{t.tema ? t.tema.tema : '—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </>
+        }
+        colunas={colunasImpressao}
+        colaboradores={colaboradores}
+        linhaHorario={(c) => `${c.horario}${c.escala ? ' - ' + c.escala : ''}`}
+      />
     </div>
   )
 }

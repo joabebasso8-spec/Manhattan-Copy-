@@ -105,14 +105,11 @@ function gerarRegistrosGinastica(): RegistroPresenca[] {
   const diasNoMes = 31
   COLABORADORES.forEach((c, ci) => {
     for (let dia = 1; dia <= diasNoMes; dia++) {
-      const dataDia = new Date(2026, 6, dia)
-      const domingo = dataDia.getDay() === 0
       let status: StatusPresenca | '' = ''
-      if (domingo) status = StatusPresenca.Folga
-      else if (c.status === 'desligado' && dia > 10) status = StatusPresenca.Desligado
+      if (c.status === 'desligado' && dia > 10) status = StatusPresenca.Desligado
       else if (ci === 4 && dia >= 14 && dia <= 20) status = StatusPresenca.Ferias
       else if (ci === 7 && (dia === 9 || dia === 10)) status = StatusPresenca.Atestado
-      // demais dias: em branco (presenca por assinatura)
+      // demais dias (inclusive fins de semana): em branco (presenca por assinatura)
       if (status !== '') registros.push({ colaboradorId: c.id, listaId: LISTA_GINASTICA.id, dia, status })
     }
   })
@@ -125,10 +122,9 @@ function gerarRegistrosDDS(): RegistroPresenca[] {
   COLABORADORES.forEach((c, ci) => {
     for (let d = 0; d <= 6; d++) {
       let status: StatusPresenca | '' = ''
-      if (d === 0 || d === 6) status = StatusPresenca.Folga
-      else if (c.status === 'desligado') status = StatusPresenca.Desligado
+      if (c.status === 'desligado') status = StatusPresenca.Desligado
       else if (ci === 2 && d === 3) status = StatusPresenca.Falta
-      // demais dias: em branco (presenca por assinatura)
+      // demais dias (inclusive fins de semana): em branco (presenca por assinatura)
       if (status !== '') registros.push({ colaboradorId: c.id, listaId: LISTA_DDS.id, dia: d, status })
     }
   })
