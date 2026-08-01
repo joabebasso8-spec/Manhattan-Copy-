@@ -1,0 +1,294 @@
+import { useMemo, useState } from 'react'
+import { ActionBar } from '../components/ActionBar'
+import { ColaboradorDialog } from '../components/ColaboradorDialog'
+import { DocumentHeader } from '../components/DocumentHeader'
+import { LegendaPanel } from '../components/LegendaPanel'
+import { PresenceGrid, type ColunaDia } from '../components/PresenceGrid'
+import { PrintSheet, type ColunaImpressao } from '../components/PrintSheet'
+import {
+  chaveData,
+  dataDeChave,
+  ehFolgaDaEscala,
+  StatusPresenca,
+  TURNOS,
+  turnoOrdinal,
+  type Colaborador,
+} from '../data/domain'
+import { HOJE } from '../data/seed'
+import { useStore } from '../data/store'
+
+const DIAS_SEMANA_ABREV = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
+const MESES = [
+  'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+  'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro',
+]
+const POR_PAGINA = 10
+const TODOS = 'Todos os turnos'
+
+/** Lista de meses (ano-mês) para o seletor. */
+const MESES_OPCOES: { iso: string; label: string }[] = (() => {
+  const res: { iso: string; label: string }[] = []
+  for (let ano = 2026; ano <= 2027; ano++) {
+    for (let m = 0; m < 12; m++) {
+      res.push({ iso: `${ano}-${String(m + 1).padStart(2, '0')}`, label: `${MESES[m]} / ${ano}` })
+    }
+  }
+  return res
+})()
+
+export function GerarListaGinastica() {
+  const store = useStore()
+  const { listaGinastica: lista, setores, usuario } = store
+
+  const mesPadrao = lista.periodoInicio.slice(0, 7) // "2026-07"
+
+  const [pagina, setPagina] = useState(0)
+  const [textSize, setTextSize] = useState<'sm' | 'md' | 'lg'>('md')
+  const [turnoFiltro, setTurnoFiltro] = useState<string>(TODOS)
+  const [mesIso, setMesIso] = useState<string>(mesPadrao)
+  const [mostrarFiltro, setMostrarFiltro] = useState(false)
+  const [dialog, setDialog] = useState<{ aberto: boolean; alvo: Colaborador | null }>({
+    aberto: false,
+    alvo: null,
+  })
+
+  const setorNome = setores.find((s) => s.id === lista.setorId)?.nome ?? '—'
+  const [ano, mes] = mesIso.split('-').map(Number) // mes 1-12
+  const primeiroDia = new Date(ano, mes - 1, 1)
+  const ultimoDia = new Date(ano, mes, 0) // dia 0 do mês seguinte = último do atual
+  const mesLabel = `${MESES[mes - 1]} / ${ano}`
+
+  // Colunas: apenas dias úteis (seg–sex) do mês selecionado. dia = chave AAAAMMDD.
+  const colunas: ColunaDia[] = useMemo(() => {
+    const cols: ColunaDia[] = []
+    for (let dia = 1; dia <= ultimoDia.getDate(); dia++) {
+      const data = new Date(ano, mes - 1, dia)
+      const dow = data.getDay()
+      if (dow === 0 || dow === 6) continue
+      cols.push({ dia: chaveData(data), label: String(dia), sub: DIAS_SEMANA_ABREV[dow] })
+    }
+    return cols
+  }, [mesIso])
+
+  const colunasImpressao: ColunaImpressao[] = colunas.map((c) => ({
+    key: c.dia,
+    label: c.label,
+  }))
+
+  const colaboradores = store.colaboradores
+  const colaboradoresFiltrados = colaboradores.filter(
+    (c) => turnoFiltro === TODOS || c.turno === turnoFiltro,
+  )
+  const totalPaginas = Math.max(1, Math.ceil(colaboradoresFiltrados.length / POR_PAGINA))
+  const paginaAtual = Math.min(pagina, totalPaginas - 1)
+  const fatia = colaboradoresFiltrados.slice(
+    paginaAtual * POR_PAGINA,
+    paginaAtual * POR_PAGINA + POR_PAGINA,
+  )
+
+  // Status. A sexta-feira é o dia da ginástica: contém SEMPRE "X" (tem
+  // prioridade sobre folga, férias e qualquer outro lançamento). Nos demais
+  // dias: registro manual > desligado > folga da escala > branco.
+  const getStatus = (cid: string, diaKey: number): StatusPresenca | '' => {
+    const data = dataDeChave(diaKey)
+    if (data.getDay() === 5) return StatusPresenca.Presente // sexta = X
+    const reg = store.registros.find(
+      (r) => r.listaId === lista.id && r.colaboradorId === cid && r.dia === diaKey,
+    )
+    if (reg) return reg.status
+    const c = store.colaboradores.find((x) => x.id === cid)
+    if (c?.status === 'desligado') return StatusPresenca.Desligado
+    if (c?.escala && ehFolgaDaEscala(c.escala, data)) return StatusPresenca.Folga
+    return ''
+  }
+
+  return (
+    <div className="lista-page">
+      <DocumentHeader codigoDocumento="PSST-FOR-042 · Lista de Ginástica Laboral" />
+
+      <div className="lista-page__barra">
+        <h1 className="lista-page__titulo">Gerar Lista de Ginástica (mensal)</h1>
+        <ActionBar
+          onAtualizar={() => setPagina(0)}
+          onAlternarTexto={() =>
+            setTextSize((t) => (t === 'sm' ? 'md' : t === 'md' ? 'lg' : 'sm'))
+          }
+          onFiltrar={() => setMostrarFiltro((v) => !v)}
+        />
+      </div>
+
+      {mostrarFiltro && (
+        <div className="filtro-bar">
+          <label className="filtro-bar__campo">
+            Mês
+            <select
+              value={mesIso}
+              onChange={(e) => {
+                setMesIso(e.target.value)
+                setPagina(0)
+              }}
+            >
+              {MESES_OPCOES.map((m) => (
+                <option key={m.iso} value={m.iso}>
+                  {m.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="filtro-bar__campo">
+            Turno para impressão
+            <select
+              value={turnoFiltro}
+              onChange={(e) => {
+                setTurnoFiltro(e.target.value)
+                setPagina(0)
+              }}
+            >
+              <option value={TODOS}>{TODOS}</option>
+              {TURNOS.map((t) => (
+                <option key={t} value={t}>
+                  {t}
+                </option>
+              ))}
+            </select>
+          </label>
+          <button className="btn btn--secondary" onClick={() => window.print()}>
+            🖨 Imprimir {turnoFiltro === TODOS ? 'todos' : turnoFiltro}
+          </button>
+        </div>
+      )}
+
+      <div className="lista-page__paineis">
+        <section className="ctx-panel">
+          <h2 className="ctx-panel__titulo">Contexto</h2>
+          <dl className="ctx-panel__dl">
+            <div><dt>Setor</dt><dd>{setorNome}</dd></div>
+            <div><dt>Turno</dt><dd>{turnoFiltro}</dd></div>
+            <div><dt>Mês</dt><dd>{mesLabel}</dd></div>
+            <div>
+              <dt>Período</dt>
+              <dd>
+                {primeiroDia.toLocaleDateString('pt-BR')} a {ultimoDia.toLocaleDateString('pt-BR')}
+              </dd>
+            </div>
+            <div><dt>Supervisor</dt><dd>{lista.supervisor}</dd></div>
+          </dl>
+        </section>
+
+        <section className="info-panel">
+          <h2 className="info-panel__titulo">Sobre a Ginástica Laboral</h2>
+          <p>
+            A Ginástica Laboral consiste em exercícios de curta duração realizados no
+            próprio ambiente de trabalho, com o objetivo de prevenir lesões por esforço
+            repetitivo (LER/DORT), reduzir a fadiga muscular e promover mais disposição e
+            integração entre a equipe. A participação é registrada mensalmente por
+            assinatura na lista impressa.
+          </p>
+        </section>
+      </div>
+
+      <div className="lista-page__controles">
+        <div className="paginacao">
+          <button
+            className="paginacao__btn"
+            title="Primeira página"
+            disabled={paginaAtual === 0}
+            onClick={() => setPagina(0)}
+          >
+            «
+          </button>
+          <button
+            className="paginacao__btn"
+            title="Página anterior"
+            disabled={paginaAtual === 0}
+            onClick={() => setPagina((p) => Math.max(0, p - 1))}
+          >
+            ‹
+          </button>
+          <span className="paginacao__label">
+            Página {paginaAtual + 1} de {totalPaginas}
+          </span>
+          <button
+            className="paginacao__btn"
+            title="Próxima página"
+            disabled={paginaAtual >= totalPaginas - 1}
+            onClick={() => setPagina((p) => Math.min(totalPaginas - 1, p + 1))}
+          >
+            ›
+          </button>
+          <button
+            className="paginacao__btn"
+            title="Última página"
+            disabled={paginaAtual >= totalPaginas - 1}
+            onClick={() => setPagina(totalPaginas - 1)}
+          >
+            »
+          </button>
+        </div>
+      </div>
+
+      <PresenceGrid
+        colaboradores={fatia}
+        colunas={colunas}
+        getStatus={getStatus}
+        onChangeStatus={(cid, dia, status) => store.setStatus(lista.id, cid, dia, status)}
+        cellMode="dropdown"
+        textSize={textSize}
+        onAdd={() => setDialog({ aberto: true, alvo: null })}
+        onEdit={(c) => setDialog({ aberto: true, alvo: c })}
+        onRemove={(c) => {
+          if (confirm(`Excluir ${c.nome}?`)) store.removeColaborador(c.id)
+        }}
+      />
+
+      <LegendaPanel />
+
+      {dialog.aberto && (
+        <ColaboradorDialog
+          colaborador={dialog.alvo}
+          onSalvar={(c) => {
+            if ('id' in c) store.updateColaborador(c)
+            else store.addColaborador(c)
+            setDialog({ aberto: false, alvo: null })
+          }}
+          onCancelar={() => setDialog({ aberto: false, alvo: null })}
+        />
+      )}
+
+      <PrintSheet
+        codigo="LPGL"
+        subtitulo="GL: Ginástica Laboral"
+        emissao={new Date(HOJE + 'T00:00:00').toLocaleDateString('pt-BR')}
+        usuario={usuario.nome}
+        empresa={usuario.empresa}
+        unidade={usuario.unidade}
+        refCabecalho={`${mes}/${ano}`}
+        setorNome={setorNome}
+        turnoLabel={turnoFiltro === TODOS ? 'Todos os turnos' : turnoOrdinal(turnoFiltro)}
+        mes={MESES[mes - 1].toLowerCase()}
+        periodoRotulo="Período"
+        periodoValor={`de ${primeiroDia.toLocaleDateString('pt-BR')} a ${ultimoDia.toLocaleDateString('pt-BR')}`}
+        supervisor={lista.supervisor}
+        meio={
+          <>
+            <h3>Ginástica Laboral</h3>
+            <p className="ps-meio-desc">
+              A ginástica laboral é uma prática que tem como principal objetivo prevenir
+              patologias relacionadas às atividades laborais e incentivar os colaboradores à
+              prática de atividades físicas, enfatizando a importância para a melhora na
+              qualidade de vida e manutenção da saúde. Apresenta baixa intensidade e melhora o
+              sistema cardíaco, respiratório e esquelético; reduz a fadiga; combate doenças
+              ocupacionais (LER/DORT, estresse, ansiedade); aumenta a atenção e a concentração;
+              e melhora a disposição.
+            </p>
+          </>
+        }
+        colunas={colunasImpressao}
+        colaboradores={colaboradoresFiltrados}
+        linhaHorario={(c) => `${c.horario}${c.escala ? ' - ' + c.escala : ''}`}
+        valorCelula={(c, key) => getStatus(c.id, Number(key))}
+        assinatura
+      />
+    </div>
+  )
+}
